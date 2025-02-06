@@ -18,4 +18,4 @@ prompt just like we did in Meta AI
 
 ## Techniques
 
--First prompt was given with few-shot prompting technique.
+-We worked with few-shot prompting technique.
