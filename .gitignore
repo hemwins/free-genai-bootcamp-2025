@@ -1,1 +1,33 @@
 .DS_Store
+# Database files
+JapaneseDB.db
+*.db-journal
+
+# Python virtual environment
+venv/
+env/
+.venv/
+.env
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# VS Code settings
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# Log folder
+logs/
+
+# Keep __init__.py
+!__init__.py
+
+
