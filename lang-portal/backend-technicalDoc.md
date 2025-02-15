@@ -8,6 +8,8 @@ A language learning school wants to build a prototype of learning portal which w
 - Use SQLite3 as the database
 - I used Flask framework 
 - Does not require authentication/authorization, assume there is a single user
+- The API follows RESTful conventions and provides JSON responses, with the server running on port 4999.
+- Flask-CORS for cross-origin resource sharing
 
 ## AI-coding assistants:
 - Cursor
@@ -44,42 +46,43 @@ A language learning school wants to build a prototype of learning portal which w
 ### Database Schema
 #### words 
 - Stores individual Japanese vocabulary words.
-- `id` (Primary Key)
-- `kanji`
-- `romaji`
-- `english`
-- `parts` (Required): Word components stored in JSON format
+ - `id` (Primary Key)
+ - `kanji`
+ - `romaji`
+ - `english`
+ - `parts` (Required): Word components stored in JSON format
 
 #### groups
 - Manages collections of words.
-- `id` (Primary Key)
-- `name` (Required): Name of the group
-- `words_count` (Default: 0): Counter cache for the number of words in the group
+ - `id` (Primary Key)
+ - `name` (Required): Name of the group
+ - `words_count` (Default: 0): Counter cache for the number of words in the group
 
 #### word_groups
 - join-table enabling many-to-many relationship between words and groups.
-- `word_id` (Foreign Key): References -> words.id
-- `group_id` (Foreign Key): References -> groups.id
+ - `word_id` (Foreign Key): References -> words.id
+ - `group_id` (Foreign Key): References -> groups.id
 
 #### study_activities
-- `id` (Primary Key)
-- `name` (Required): Name of the activity ("Flashcards", "Quiz")
-- `url` (Required): full URL of the study activity
+- a specific study activity, linking study session to a group
+ - `id` (Primary Key)
+ - `name` (Required): Name of the activity ("Flashcards", "Quiz")
+ - `url` (Required): full URL of the study activity
 
 #### study_sessions
-- Records individual study sessions.
-- `id` (Primary Key): Unique identifier for each session
-- `group_id` (Foreign Key): References -> groups.id
-- `study_activity_id` (Foreign Key): References -> study_activities.id
-- `created_at` (Default: Current Time): When the session was created
+- Records individual study sessions grouping word_review_item
+ - `id` (Primary Key): Unique identifier for each session
+ - `group_id` (Foreign Key): References -> groups.id
+ - `study_activity_id` (Foreign Key): References -> study_activities.id
+ - `created_at` (Default: Current Time): When the session was created
 
 #### word_review_items
-- Tracks individual word reviews within study sessions.
-- `id` (Primary Key): Unique identifier for each review
-- `word_id` (Foreign Key): References -> words.id
-- `study_session_id` (Foreign Key): References -> study_sessions.id
-- `correct` (Boolean, Required): Whether the answer was correct
-- `created_at` (Default: Current Time): When the review occurred
+- Tracks individual word reviews within study sessions. Record of word practice, determining if word was correct or not
+ - `id` (Primary Key): Unique identifier for each review
+ - `word_id` (Foreign Key): References -> words.id
+ - `study_session_id` (Foreign Key): References -> study_sessions.id
+ - `correct` (Boolean, Required): Whether the answer was correct
+ - `created_at` (Default: Current Time): When the review occurred
 
 #### Relationships
 
