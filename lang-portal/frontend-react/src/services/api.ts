@@ -1,4 +1,11 @@
-const API_BASE_URL = 'http://localhost:4999/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const debug = import.meta.env.DEV;
+
+function logDebug(...args: any[]) {
+  if (debug) {
+    console.log("[API]", ...args);
+  }
+}
 
 // Group types
 export interface Group {
@@ -53,10 +60,10 @@ export interface StudySession {
 }
 
 export interface ActivityCard {
-  'id': number,
-  'title': string
-  'launch_url': string
-  'preview_url': string
+  id: number;
+  title: string;
+  launch_url: string;
+  preview_url: string;
 }
 
 export interface WordReview {
@@ -87,14 +94,14 @@ export interface StudyStats {
 // Group API
 export const fetchGroups = async (
   page: number = 1,
-  sortBy: string = 'name',
-  order: 'asc' | 'desc' = 'asc'
+  sortBy: string = "name",
+  order: "asc" | "desc" = "asc"
 ): Promise<GroupsResponse> => {
   const response = await fetch(
     `${API_BASE_URL}/groups?page=${page}&sort_by=${sortBy}&order=${order}`
   );
   if (!response.ok) {
-    throw new Error('Failed to fetch groups');
+    throw new Error("Failed to fetch groups");
   }
   return response.json();
 };
@@ -114,12 +121,12 @@ export interface GroupWordsResponse {
 export const fetchGroupDetails = async (
   groupId: number,
   page: number = 1,
-  sortBy: string = 'kanji',
-  order: 'asc' | 'desc' = 'asc'
+  sortBy: string = "kanji",
+  order: "asc" | "desc" = "asc"
 ): Promise<GroupDetails> => {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}`);
   if (!response.ok) {
-    throw new Error('Failed to fetch group details');
+    throw new Error("Failed to fetch group details");
   }
   return response.json();
 };
@@ -127,14 +134,14 @@ export const fetchGroupDetails = async (
 export const fetchGroupWords = async (
   groupId: number,
   page: number = 1,
-  sortBy: string = 'kanji',
-  order: 'asc' | 'desc' = 'asc'
+  sortBy: string = "kanji",
+  order: "asc" | "desc" = "asc"
 ): Promise<GroupWordsResponse> => {
   const response = await fetch(
     `${API_BASE_URL}/groups/${groupId}/words?page=${page}&sort_by=${sortBy}&order=${order}`
   );
   if (!response.ok) {
-    throw new Error('Failed to fetch group words');
+    throw new Error("Failed to fetch group words");
   }
   return response.json();
 };
@@ -142,14 +149,14 @@ export const fetchGroupWords = async (
 // Word API
 export const fetchWords = async (
   page: number = 1,
-  sortBy: string = 'kanji',
-  order: 'asc' | 'desc' = 'asc'
+  sortBy: string = "kanji",
+  order: "asc" | "desc" = "asc"
 ): Promise<WordsResponse> => {
   const response = await fetch(
     `${API_BASE_URL}/words?page=${page}&sort_by=${sortBy}&order=${order}`
   );
   if (!response.ok) {
-    throw new Error('Failed to fetch words');
+    throw new Error("Failed to fetch words");
   }
   return response.json();
 };
@@ -157,7 +164,7 @@ export const fetchWords = async (
 export const fetchWordDetails = async (wordId: number): Promise<Word> => {
   const response = await fetch(`${API_BASE_URL}/words/${wordId}`);
   if (!response.ok) {
-    throw new Error('Failed to fetch word details');
+    throw new Error("Failed to fetch word details");
   }
   const data: WordResponse = await response.json();
   return data.word;
@@ -168,57 +175,80 @@ export const createStudySession = async (
   groupId: number,
   studyActivityId: number
 ): Promise<{ session_id: number }> => {
-  const response = await fetch(`${API_BASE_URL}/study-sessions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      group_id: groupId,
-      study_activity_id: studyActivityId,
-    }),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create study session');
+  logDebug("Creating study session:", { groupId, studyActivityId });
+  try {
+    const response = await fetch(`${API_BASE_URL}/study-sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        group_id: groupId,
+        study_activity_id: studyActivityId,
+      }),
+    });
+    logDebug("Response:", response);
+
+    if (!response.ok) {
+      const error = new Error("Failed to create study session") as ApiError;
+      error.status = response.status;
+      error.response = response;
+      throw error;
+    }
+
+    const data = await response.json();
+    logDebug("Session created:", data);
+
+    if (!data.session.id) {
+      throw new Error("Server response missing session ID");
+    }
+
+    return { session_id: data.session.id };
+  } catch (err) {
+    console.error("API Error:", err);
+    throw err;
   }
-  const session = await response.json();
-  return {'session_id': session.id};
 };
 
 export const submitStudySessionReview = async (
   sessionId: number,
   reviews: WordReview[]
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/study-sessions/${sessionId}/review`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ reviews }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/study-sessions/${sessionId}/review`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reviews }),
+    }
+  );
   if (!response.ok) {
-    throw new Error('Failed to submit study session review');
+    throw new Error("Failed to submit study session review");
   }
 };
 
-export const getStudyActivities = async () : Promise<ActivityCard[]> => {
-  const response = await fetch(`${API_BASE_URL}/study-activities`)
-    if (!response.ok) {
-      throw new Error('Failed to fetch study activities')
-    }
-    return response.json();
-}
+export const getStudyActivities = async (): Promise<ActivityCard[]> => {
+  const response = await fetch(`${API_BASE_URL}/study-activities`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch study activities");
+  }
+  return response.json();
+};
 
 export interface StudyActivityLaunchData {
-  activity: ActivityCard,
-  groups: WordGroup[]
+  activity: ActivityCard;
+  groups: WordGroup[];
 }
 
-export const getStudyActivityLaunch = async (id: string) : Promise<StudyActivityLaunchData> => {
+export const getStudyActivityLaunch = async (
+  id: string
+): Promise<StudyActivityLaunchData> => {
   const response = await fetch(`${API_BASE_URL}/study-activities/${id}/launch`);
-  if (!response.ok) throw new Error('Failed to fetch launch data');
-  return response.json()
-}
+  if (!response.ok) throw new Error("Failed to fetch launch data");
+  return response.json();
+};
 
 export interface StudySessionsResponse {
   items: StudySession[];
@@ -236,7 +266,7 @@ export async function fetchStudySessions(
     `${API_BASE_URL}/study-sessions?page=${page}&per_page=${perPage}`
   );
   if (!response.ok) {
-    throw new Error('Failed to fetch study sessions');
+    throw new Error("Failed to fetch study sessions");
   }
   return response.json();
 }
@@ -250,33 +280,101 @@ export interface StudySessionsResponse {
 export async function fetchGroupStudySessions(
   groupId: number,
   page: number = 1,
-  sortBy: string = 'created_at',
-  order: 'asc' | 'desc' = 'desc'
+  sortBy: string = "created_at",
+  order: "asc" | "desc" = "desc"
 ): Promise<StudySessionsResponse> {
   const response = await fetch(
     `${API_BASE_URL}/groups/${groupId}/study-sessions?page=${page}&sort_by=${sortBy}&order=${order}`
   );
   if (!response.ok) {
-    throw new Error('Failed to fetch group study sessions');
+    throw new Error("Failed to fetch group study sessions");
   }
   return response.json();
 }
 
 // Dashboard API
-export const fetchRecentStudySession = async (): Promise<RecentSession | null> => {
-  const response = await fetch(`${API_BASE_URL}/dashboard/recent-session`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch recent session');
-  }
-  const data = await response.json();
-  console.log('Raw response from recent session:', data);
-  return data;
-};
+export const fetchRecentStudySession =
+  async (): Promise<RecentSession | null> => {
+    const response = await fetch(`${API_BASE_URL}/dashboard/recent-session`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch recent session");
+    }
+    const data = await response.json();
+    console.log("Raw response from recent session:", data);
+    return data;
+  };
 
 export const fetchStudyStats = async (): Promise<StudyStats> => {
   const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
   if (!response.ok) {
-    throw new Error('Failed to fetch study stats');
+    throw new Error("Failed to fetch study stats");
   }
   return response.json();
+};
+
+// Study Activity API
+export const resetStudyHistory = async (): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/study-sessions/reset`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to reset history");
+  }
+};
+
+export const fetchStudyActivity = async (
+  id: string
+): Promise<StudyActivity> => {
+  const response = await fetch(`${API_BASE_URL}/study-activities/${id}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch study activity");
+  }
+  return response.json();
+};
+
+export const fetchStudyActivitySessions = async (
+  id: string,
+  page: number,
+  perPage: number
+): Promise<StudySessionsResponse> => {
+  const response = await fetch(
+    `${API_BASE_URL}/study-activities/${id}/sessions?page=${page}&per_page=${perPage}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch sessions");
+  }
+  return response.json();
+};
+
+// Add more specific types
+interface ApiError extends Error {
+  status?: number;
+  response?: Response;
+}
+
+export const fetchStudySession = async (
+  id: string,
+  page: number = 1,
+  perPage: number = 10
+): Promise<SessionResponse> => {
+  logDebug("Fetching study session:", { id, page, perPage });
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/study-sessions/${id}?page=${page}&per_page=${perPage}`
+    );
+    logDebug("Response:", response);
+    if (!response.ok) {
+      const error = new Error("Failed to fetch session data") as ApiError;
+      error.status = response.status;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  } catch (err) {
+    console.error("API Error:", err);
+    throw err;
+  }
 };

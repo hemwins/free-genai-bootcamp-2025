@@ -1,47 +1,43 @@
-import { useState } from 'react'
-import { useTheme } from '@/components/theme-provider'
+import { useState } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { resetStudyHistory } from "../services/api";
 
 export default function Settings() {
-  const { theme, setTheme } = useTheme()
-  const [showResetDialog, setShowResetDialog] = useState(false)
-  const [resetConfirmation, setResetConfirmation] = useState('')
+  const { theme, setTheme } = useTheme();
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetConfirmation, setResetConfirmation] = useState("");
 
   const handleReset = async () => {
-    if (resetConfirmation.toLowerCase() === 'reset me') {
+    if (resetConfirmation.toLowerCase() === "reset me") {
       try {
-        const response = await fetch('http://localhost:5000/api/study-sessions/reset', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to reset history');
-        }
+        await resetStudyHistory();
 
         // Reset was successful
         setShowResetDialog(false);
-        setResetConfirmation('');
-        
+        setResetConfirmation("");
+
         // Show success message
-        alert('Study history has been cleared successfully');
-      } catch (error) {
-        console.error('Error resetting history:', error);
-        alert('Failed to reset history. Please try again.');
+        alert("Study history has been cleared successfully");
+      } catch (err) {
+        console.error("Error resetting history:", err);
+        alert("Failed to reset history. Please try again.");
       }
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Settings</h1>
-      
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+        Settings
+      </h1>
+
       <div className="flex items-center justify-between">
         <span className="text-gray-700 dark:text-gray-300">Theme</span>
         <select
           value={theme}
-          onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
+          onChange={(e) =>
+            setTheme(e.target.value as "light" | "dark" | "system")
+          }
           className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="light">Light</option>
@@ -62,7 +58,9 @@ export default function Settings() {
       {showResetDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Confirm Reset</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+              Confirm Reset
+            </h2>
             <p className="mb-4 text-gray-600 dark:text-gray-400">
               Type "reset me" to confirm database reset:
             </p>
@@ -90,5 +88,5 @@ export default function Settings() {
         </div>
       )}
     </div>
-  )
+  );
 }

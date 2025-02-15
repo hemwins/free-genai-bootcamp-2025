@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useNavigation } from '@/context/NavigationContext'
 import StudySessionsTable from '@/components/StudySessionsTable'
 import Pagination from '@/components/Pagination'
+import { fetchStudyActivity, fetchStudyActivitySessions } from '../services/api'
 
 type Session = {
   id: number
@@ -49,22 +50,11 @@ export default function StudyActivityShow() {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`http://localhost:5000/api/study-activities/${id}`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch study activity')
-        }
-        const data = await response.json()
+        const data = await fetchStudyActivity(id)
         setActivity(data)
         setCurrentStudyActivity(data)
         
-        // Fetch sessions for the current page
-        const sessionsResponse = await fetch(
-          `http://localhost:5000/api/study-activities/${id}/sessions?page=${currentPage}&per_page=${ITEMS_PER_PAGE}`
-        )
-        if (!sessionsResponse.ok) {
-          throw new Error('Failed to fetch sessions')
-        }
-        const sessionsData = await sessionsResponse.json()
+        const sessionsData = await fetchStudyActivitySessions(id, currentPage, ITEMS_PER_PAGE)
         setSessionData({
           items: sessionsData.items.map((item: any) => ({
             id: item.id,
