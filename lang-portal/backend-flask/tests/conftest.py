@@ -1,75 +1,64 @@
 import pytest
 from app import create_app
-from config import TestConfig
-from lib.db import Db
-from tests.test_helpers import print_table_contents
-import logging
-from datetime import datetime
-import os
-import sys
+from flask import g
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-@pytest.fixture(scope='session')
+@pytest.fixture
 def app():
-    app = create_app()
-    app.config.from_object(TestConfig)
-    
-    # Ensure test logs directory exists
-    os.makedirs('logs', exist_ok=True)
-    
-    
-    # Configure logging once for test session
-    if not hasattr(app, '_test_logging_configured'):
-        handler = logging.FileHandler('logs/test.log')
-        handler.setFormatter(logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
-        ))
-        app.logger.addHandler(handler)
-        app.logger.setLevel(logging.DEBUG)
-        app._test_logging_configured = True
+    """Create and configure a test Flask app instance"""
+    app = create_app({
+        'TESTING': True,
+        'DATABASE': ':memory:'  # Use in-memory SQLite for testing
+    })
     
     return app
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def client(app):
+    """Create a test client"""
     return app.test_client()
 
-@pytest.fixture(scope='function')
-def setup_test_db(app):
-    """Initialize test database before each test"""
-    with app.app_context():
-        db = app.db
-        cursor = db.cursor()
-        
-         # Log database operations
-        app.logger.info("Setting up test database")
-        
-        try:
-            # Insert test data if not exists
-            cursor.execute('INSERT OR IGNORE INTO groups (id, name) VALUES (1, "Test Group")')
-            cursor.execute('INSERT OR IGNORE INTO study_activities (id, name) VALUES (1, "Test Activity")')
-            db.commit()
-            app.logger.info("Test data inserted successfully")
-            
-            print("\n=== Database State Before Test ===")
-            print_table_contents(db, 'groups')
-            print_table_contents(db, 'study_activities')
-            
-            yield db
-            
-            print("\n=== Database State After Test ===")
-            print_table_contents(db, 'study_sessions')
-            
-            # Clean up test data after each test
-            cursor.execute('DELETE FROM study_sessions WHERE created_at < datetime("now", "-1 hour")')
-            db.commit()
-            app.logger.info("Old test sessions cleaned up")
-            
-        except Exception as e:
-            app.logger.error(f"Database setup error: {str(e)}")
-            raise e
-
-@pytest.fixture(scope='function')
+@pytest.fixture
 def app_context(app):
-    with app.app_context():
-        yield
+    """Create an application context"""
+    with app.app_context() as ctx:
+        # Initialize test database
+        cursor = app.db.get().cursor()
+        
+        # Create tables
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS groups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                words_count INTEGER DEFAULT 0
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS words (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kanji TEXT NOT NULL,
+                english TEXT NOT NULL,
+                romaji TEXT NOT NULL,
+                parts TEXT NOT NULL
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS word_groups (
+                word_id INTEGER NOT NULL,
+                group_id INTEGER NOT NULL,
+                FOREIGN KEY (word_id) REFERENCES words(id),
+                FOREIGN KEY (group_id) REFERENCES groups(id)
+            )
+        ''')
+        
+        app.db.get().commit()
+        
+        yield ctx
+        
+        # Clean up after test
+        cursor.execute('DROP TABLE IF EXISTS word_groups')
+        cursor.execute('DROP TABLE IF EXISTS words')
+        cursor.execute('DROP TABLE IF EXISTS groups')
+        app.db.get().commit()
+        app.db.close() 

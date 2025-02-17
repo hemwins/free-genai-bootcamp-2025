@@ -204,7 +204,7 @@ def load(app):
 
   @app.route('/api/groups/<int:group_id>', methods=['GET'])
   @cross_origin()
-  def get_group(igroup_id):
+  def get_group(group_id):
     try:
       cursor = app.db.cursor()
 
@@ -213,7 +213,7 @@ def load(app):
         SELECT id, name, words_count
         FROM groups
         WHERE id = ?
-      ''', (id,))
+      ''', (group_id,))
       
       group = cursor.fetchone()
       if not group:
@@ -227,7 +227,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/groups/<int:id>/words', methods=['GET'])
+  @app.route('/api/groups/<int:id>/words', methods=['GET'])
   @cross_origin()
   def get_group_words(id):
     try:
@@ -320,13 +320,10 @@ def load(app):
         w.kanji,
         w.english,
         w.romaji,
-        w.part_of_speech,
-        w.level,
-        wg.created_at as added_at
+        w.parts
         FROM words w
         JOIN word_groups wg ON w.id = wg.word_id
         WHERE wg.group_id = ?
-        ORDER BY wg.created_at DESC
       ''', (id,))
         
       words = cursor.fetchall()
@@ -334,12 +331,10 @@ def load(app):
       # Convert to list of dictionaries
       words_data = [{
         'id': word['id'],
-        'japanese': word['japanese'],
+        'kanji': word['kanji'],
         'english': word['english'],
         'romaji': word['romaji'],
-        'part_of_speech': word['part_of_speech'],
-        'level': word['level'],
-        'added_at': word['added_at']
+        'parts': word['parts']
       } for word in words]
         
       app.logger.info(f"Retrieved {len(words_data)} words for group {id}")
@@ -355,7 +350,7 @@ def load(app):
       
   
 
-  @app.route('/api/groups/<int:id>/study_sessions', methods=['GET'])
+  @app.route('/api/groups/<int:id>/study-sessions', methods=['GET'])
   @cross_origin()
   def get_group_study_sessions(id):
     try:

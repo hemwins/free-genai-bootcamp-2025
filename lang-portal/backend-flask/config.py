@@ -32,7 +32,9 @@ def configure_logging(app):
 
 class TestConfig(Config):
     TESTING = True
-    
+    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                           'instance', 'test_JapaneseDB.db')
+
     @staticmethod
     def configure_logging(app):
         # Disable duplicate logging in tests

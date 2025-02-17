@@ -128,24 +128,24 @@ def load(app):
             ''')
             current_streak = cursor.fetchone()["streak"]
             
-            # Get top performing groups
-            cursor.execute('''
-                SELECT 
-                    g.id,
-                    g.name,
-                    COUNT(DISTINCT ss.id) as session_count,
-                    COUNT(DISTINCT wri.word_id) as words_studied,
-                    COALESCE(SUM(CASE WHEN wri.correct = 1 THEN 1 END), 0) as correct_count,
-                    COALESCE(SUM(CASE WHEN wri.correct = 0 THEN 1 END), 0) as wrong_count
-                FROM groups g
-                LEFT JOIN study_sessions ss ON g.id = ss.group_id
-                LEFT JOIN word_review_items wri ON ss.id = wri.study_session_id
-                GROUP BY g.id, g.name
-                ORDER BY correct_count DESC
-                LIMIT 5
-            ''')
+            # # Get top performing groups
+            # cursor.execute('''
+            #     SELECT 
+            #         g.id,
+            #         g.name,
+            #         COUNT(DISTINCT ss.id) as session_count,
+            #         COUNT(DISTINCT wri.word_id) as words_studied,
+            #         COALESCE(SUM(CASE WHEN wri.correct = 1 THEN 1 END), 0) as correct_count,
+            #         COALESCE(SUM(CASE WHEN wri.correct = 0 THEN 1 END), 0) as wrong_count
+            #     FROM groups g
+            #     LEFT JOIN study_sessions ss ON g.id = ss.group_id
+            #     LEFT JOIN word_review_items wri ON ss.id = wri.study_session_id
+            #     GROUP BY g.id, g.name
+            #     ORDER BY correct_count DESC
+            #     LIMIT 5
+            # ''')
             
-            top_groups = cursor.fetchone()["top_groups"]
+            # top_groups = cursor.fetchone()["top_groups"]
             
             
             return jsonify({
@@ -156,7 +156,7 @@ def load(app):
                 "total_sessions": total_sessions,
                 "active_groups": active_groups,
                 "current_streak": current_streak,
-                "top_groups": top_groups
+                # "top_groups": top_groups
             })
             
         except Exception as e:

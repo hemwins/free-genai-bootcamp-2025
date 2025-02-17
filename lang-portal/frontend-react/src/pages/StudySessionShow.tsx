@@ -10,7 +10,7 @@ interface StudySession {
   id: number;
   group_id: number;
   group_name: string;
-  activity_id: number;
+  study_activity_id: number;
   activity_name: string;
   start_time: string;
   end_time: string;
@@ -46,6 +46,7 @@ export default function StudySessionShow() {
       try {
         console.log("id", JSON.stringify(id));
         const data = await fetchStudySession(id, currentPage);
+        console.log("fetchStudySession Response",data);
         setSession(data.session);
         setWords(data.words);
         setTotalPages(data.total_pages);
@@ -101,7 +102,7 @@ export default function StudySessionShow() {
               Activity
             </h2>
             <Link
-              to={`/study-activities/${session.activity_id}`}
+              to={`/study-activities/${session.study_activity_id}`}
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               {session.activity_name}

@@ -16,6 +16,32 @@ def load(app):
       per_page = request.args.get('per_page', 10, type=int)
       offset = (page - 1) * per_page
 
+      # Get sorting parameters from the query string
+      sort_by = request.args.get('sort_by', 'id')  # Default to sorting by 'kanji'
+      order = request.args.get('order', 'asc').upper()  # Default to ascending order
+
+      # Define valid columns mapping
+      valid_columns = {
+        'id': 'ss.id',
+        'group_name': 'g.name',
+        'activity_name': 'sa.name',
+        'start_time': 'ss.created_at',
+        'end_time': 'ss.created_at',
+        'review_items_count': 'review_items_count'
+      }
+      
+      # Validate sort_by parameter
+      if sort_by not in valid_columns:
+        app.logger.warning(f"Invalid sort field: {sort_by}, defaulting to Id")
+        sort_by = 'id'
+        
+      # Validate order parameter
+      if order not in ['ASC', 'DESC']:
+        app.logger.warning(f"Invalid sort order: {order}, defaulting to ASC")
+        order = 'ASC'
+        
+
+        
       # Get total count
       cursor.execute('''
         SELECT COUNT(*) as count 
@@ -26,7 +52,7 @@ def load(app):
       total_count = cursor.fetchone()['count']
 
       # Get paginated sessions
-      cursor.execute('''
+      query = f'''
         SELECT 
           ss.id,
           ss.group_id,
@@ -40,9 +66,10 @@ def load(app):
         JOIN study_activities sa ON sa.id = ss.study_activity_id
         LEFT JOIN word_review_items wri ON wri.study_session_id = ss.id
         GROUP BY ss.id
-        ORDER BY ss.created_at DESC
+        ORDER BY {valid_columns[sort_by]} {order}
         LIMIT ? OFFSET ?
-      ''', (per_page, offset))
+      '''
+      cursor.execute(query, (per_page, offset))
       sessions = cursor.fetchall()
 
       return jsonify({

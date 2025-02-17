@@ -42,9 +42,11 @@ export interface WordResponse {
 
 export interface WordsResponse {
   words: Word[];
+  pagination: {
   total_pages: number;
   current_page: number;
   total_words: number;
+  }
 }
 
 // Study Session types
@@ -52,7 +54,7 @@ export interface StudySession {
   id: number;
   group_id: number;
   group_name: string;
-  activity_id: number;
+  study_activity_id: number;
   activity_name: string;
   start_time: string;
   end_time: string;
@@ -260,10 +262,12 @@ export interface StudySessionsResponse {
 
 export async function fetchStudySessions(
   page: number = 1,
-  perPage: number = 10
+  perPage: number = 10,
+  sortKey: string = "start_time",
+  sortDirection: "asc" | "desc" = "desc"
 ): Promise<StudySessionsResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/study-sessions?page=${page}&per_page=${perPage}`
+    `${API_BASE_URL}/study-sessions?page=${page}&per_page=${perPage}&sort_by=${sortKey}&order=${sortDirection}`
   );
   if (!response.ok) {
     throw new Error("Failed to fetch study sessions");

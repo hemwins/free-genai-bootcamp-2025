@@ -135,7 +135,7 @@ def load(app):
       app.db.close()
 
   # Endpoint: GET /words/:id to get a single word with its details
-  @app.route('/words/<int:word_id>', methods=['GET'])
+  @app.route('/api/words/<int:word_id>', methods=['GET'])
   @cross_origin()
   def get_word(word_id):
     try:
