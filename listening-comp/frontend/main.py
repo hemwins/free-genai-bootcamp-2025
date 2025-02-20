@@ -309,11 +309,16 @@ def render_structured_stage():
                     
                     for section in sections:
                         if section.startswith("Introduction:"):
-                            dialogue_dict["introduction"] = section.replace("Introduction:", "").strip()
+                            dialogue_dict["Introduction"] = section.replace("Introduction:", "").strip()
                         elif section.startswith("Conversation:"):
-                            dialogue_dict["conversation"] = section.replace("Conversation:", "").strip()
+                            dialogue_dict["Conversation"] = section.replace("Conversation:", "").strip()
                         elif section.startswith("Question:"):
-                            dialogue_dict["question"] = section.replace("Question:", "").strip()
+                            dialogue_dict["Question"] = section.replace("Question:", "").strip()
+                        elif section.startswith("Topic:"):
+                            dialogue_dict["Topic"] = section.replace("Topic:", "").strip()
+                        elif section.startswith("Options:"):
+                            dialogue_dict["Options"] = section.replace("Options:", "").strip().split('<option-separator>')
+                    #<option-separator>
                     
                     structured_data.append(dialogue_dict)
                 
@@ -321,13 +326,13 @@ def render_structured_stage():
                 for idx, data in enumerate(structured_data, 1):
                     with st.expander(f"Question {idx}"):
                         st.markdown("**Introduction**")
-                        st.text(data.get("introduction", "N/A"))
+                        st.text(data.get("Introduction", "N/A"))
                         
                         st.markdown("**Conversation**")
-                        st.text(data.get("conversation", "N/A"))
+                        st.text(data.get("Conversation", "N/A"))
                         
                         st.markdown("**Question**")
-                        st.text(data.get("question", "N/A"))
+                        st.text(data.get("Question", "N/A"))
                         
                         print(f"Save Quesation {data}")
                         # Add save button for each dialogue
@@ -335,7 +340,7 @@ def render_structured_stage():
                             save_question(
                                 question=data,
                                 practice_type="Dialogue Practice",
-                                topic="listening_comprehension"
+                                topic=data.get("Topic", "Other")  # Use default if topic not found
                             )
                             st.success(f"Question {idx} saved!")
                             
@@ -710,7 +715,8 @@ def save_question(question, practice_type, topic, audio_file=None):
     
     # Create a unique ID for the question using timestamp
     question_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
+    if "Options" in question:
+        question["Options"] = [opt.strip() for opt in question["Options"]]
     # Add metadata
     question_data = {
         "question": question,
