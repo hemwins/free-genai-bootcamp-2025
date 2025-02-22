@@ -1,6 +1,6 @@
 manga_ocr==0.1.13
 Pillow==11.0.0
-streamlit==1.40.2
+# streamlit==1.40.2
 # huggingface-hub==0.28.1
 python-dotenv==1.0.0
 requests>=2.31.0
@@ -18,5 +18,7 @@ torchvision==0.21.0
 # --extra-index-url https://download.pytorch.org/whl/cpu
 # torch==2.6.0+cpu
 # torchvision==0.21.0+cpu
-gradio>=4.19.2
+gradio>=5.17.0
 openai>=1.0.0
+# openai==1.12.0
+# requests>=2.31.0

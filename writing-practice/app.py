@@ -7,6 +7,7 @@ from openai import OpenAI
 import os
 import dotenv
 import yaml
+from word import WordPracticeApp  # Add this import
 
 dotenv.load_dotenv()
 
@@ -32,12 +33,16 @@ class JapaneseWritingApp:
         self.current_sentence = None
         self.mocr = None
         self.load_vocabulary()
+        # Initialize word practice with shared vocabulary
+        self.word_practice = WordPracticeApp(self.vocabulary)
 
     def load_vocabulary(self):
+        """Load vocabulary from API"""
+        logger.debug("Loading vocabulary from API")
         """Fetch vocabulary from API using group_id"""
         try:
             # Get group_id from environment variable or use default
-            group_id = os.getenv('GROUP_ID', '1')
+            group_id = 1
             url = f"http://localhost:4999/api/groups/{group_id}/words/raw"
             logger.debug(f"Fetching vocabulary from: {url}")
             
@@ -158,9 +163,9 @@ class JapaneseWritingApp:
             return "Error processing submission", "Error processing submission", "C", f"An error occurred: {str(e)}"
 
 def create_ui():
+    # Initialize app with query parameters
     app = JapaneseWritingApp()
-    
-    # Custom CSS for larger text
+    word_app = app.word_practice
     custom_css = """
     .large-text-output textarea {
         font-size: 40px !important;
@@ -169,61 +174,126 @@ def create_ui():
     }
     """
     
-    with gr.Blocks(
-        title="Japanese Writing Practice",
-        css=custom_css
-    ) as interface:
+    with gr.Blocks(title="Japanese Writing Practice", css=custom_css) as interface:
         gr.Markdown("# Japanese Writing Practice")
         
+        # Add practice mode selection
         with gr.Row():
-            with gr.Column():
-                generate_btn = gr.Button("Generate New Sentence", variant="primary")
-                # Make sentence output more prominent with larger text and more lines
-                sentence_output = gr.Textbox(
-                    label="Generated Sentence",
-                    lines=3,
-                    scale=2,  # Make the component larger
-                    show_label=True,
-                    container=True,
-                    # Add custom CSS for larger text
-                    elem_classes=["large-text-output"]
-                )
-                word_info = gr.Markdown("### Word Information")
-                english_output = gr.Textbox(label="English", interactive=False)
-                kanji_output = gr.Textbox(label="Kanji", interactive=False)
-                reading_output = gr.Textbox(label="Reading", interactive=False)
-            
-            with gr.Column():
-                image_input = gr.Image(label="Upload your handwritten sentence", type="filepath")
-                submit_btn = gr.Button("Submit", variant="secondary")
-                
-                with gr.Group():
-                    gr.Markdown("### Feedback")
-                    transcription_output = gr.Textbox(
-                        label="Transcription",
+            practice_mode = gr.Radio(
+                choices=["Sentence Practice", "Word Practice"],
+                value="Sentence Practice",
+                label="Select Practice Mode"
+            )
+        
+        # Sentence Practice UI
+        with gr.Column() as sentence_container:
+            with gr.Row():
+                with gr.Column():
+                    generate_sentence_btn = gr.Button("Generate New Sentence", variant="primary")
+                    sentence_output = gr.Textbox(
+                        label="Generated Sentence",
                         lines=3,
                         scale=2,
                         show_label=True,
                         container=True,
                         elem_classes=["large-text-output"]
                     )
-                    translation_output = gr.Textbox(label="Translation", lines=2)
-                    grade_output = gr.Textbox(label="Grade")
-                    feedback_output = gr.Textbox(label="Feedback", lines=3)
+                    sentence_word_info = gr.Markdown("### Word Information")
+                    sentence_english = gr.Textbox(label="English", interactive=False)
+                    sentence_kanji = gr.Textbox(label="Kanji", interactive=False)
+                    sentence_reading = gr.Textbox(label="Reading", interactive=False)
+                
+                with gr.Column():
+                    sentence_image = gr.Image(label="Upload your handwritten sentence", type="filepath")
+                    sentence_submit = gr.Button("Submit", variant="secondary")
+                    
+                    with gr.Group():
+                        gr.Markdown("### Feedback")
+                        sentence_transcription = gr.Textbox(
+                            label="Transcription",
+                            lines=3,
+                            scale=2,
+                            show_label=True,
+                            container=True,
+                            elem_classes=["large-text-output"]
+                        )
+                        sentence_translation = gr.Textbox(label="Translation", lines=2)
+                        sentence_grade = gr.Textbox(label="Grade")
+                        sentence_feedback = gr.Textbox(label="Feedback", lines=3)
+
+        # Word Practice UI
+        with gr.Column(visible=False) as word_container:
+            with gr.Row():
+                with gr.Column():
+                    generate_word_btn = gr.Button("Get New Word", variant="primary")
+                    kanji_output = gr.Textbox(
+                        label="Kanji",
+                        lines=2,
+                        scale=2,
+                        show_label=True,
+                        container=True,
+                        elem_classes=["large-text-output"],
+                        interactive=False
+                    )
+                    word_info = gr.Markdown("### Word Information")
+                    reading_output = gr.Textbox(label="Reading", interactive=False)
+                    english_output = gr.Textbox(label="English", interactive=False)
+                    instruction_output = gr.Textbox(label="Instructions", interactive=False)
+                
+                with gr.Column():
+                    word_image = gr.Image(label="Upload your handwritten word", type="filepath")
+                    word_submit = gr.Button("Submit", variant="secondary")
+                    
+                    with gr.Group():
+                        gr.Markdown("### Results")
+                        word_transcription = gr.Textbox(
+                            label="Your Writing",
+                            lines=1,
+                            scale=2,
+                            show_label=True,
+                            container=True,
+                            elem_classes=["large-text-output"]
+                        )
+                        word_grade = gr.Textbox(label="Result")
 
         # Event handlers
-        generate_btn.click(
-            fn=app.get_random_word_and_sentence,
-            outputs=[sentence_output, english_output, kanji_output, reading_output]
+        def switch_mode(choice):
+            if choice == "Sentence Practice":
+                return gr.update(visible=True), gr.update(visible=False)
+            else:
+                return gr.update(visible=False), gr.update(visible=True)
+        
+        practice_mode.change(
+            fn=switch_mode,
+            inputs=[practice_mode],
+            outputs=[sentence_container, word_container]
         )
         
-        def handle_submission(image):
-            return app.grade_submission(image)
-            
-        submit_btn.click(
-            fn=handle_submission,
-            inputs=[image_input],
-            outputs=[transcription_output, translation_output, grade_output, feedback_output]
+        # Sentence practice handlers
+        generate_sentence_btn.click(
+            fn=app.get_random_word_and_sentence,
+            outputs=[sentence_output, sentence_english, sentence_kanji, sentence_reading]
+        )
+        
+        sentence_submit.click(
+            fn=app.grade_submission,
+            inputs=[sentence_image],
+            outputs=[sentence_transcription, sentence_translation, sentence_grade, sentence_feedback]
+        )
+        
+        # Word practice handlers
+        generate_word_btn.click(
+            fn=word_app.get_random_word,
+            outputs=[kanji_output, reading_output, english_output, instruction_output]
+        )
+        
+        def handle_word_submission(image):
+            return word_app.grade_submission(image, 20)
+        
+        word_submit.click(
+            fn=handle_word_submission,
+            inputs=[word_image],
+            outputs=[word_transcription, word_grade]
         )
 
     return interface
