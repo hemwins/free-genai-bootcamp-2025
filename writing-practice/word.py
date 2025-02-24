@@ -17,12 +17,9 @@ fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(fh)
 
 class WordPracticeApp:
-    def __init__(self, vocabulary=None):
-        """Initialize with shared vocabulary"""
+    def __init__(self):
         self.mocr = None
-        self.vocabulary = vocabulary
         self.current_word = None
-        # Don't load vocabulary here since it's passed in
 
     def get_random_word(self):
         """Get a random word from vocabulary"""
@@ -41,7 +38,7 @@ class WordPracticeApp:
             "Write the kanji character shown above"
         )
 
-    def grade_submission(self, image, session_id):
+    def grade_submission(self, image):
         """Process image submission and grade it"""
         try:
             # Initialize MangaOCR for transcription if not already initialized
@@ -73,7 +70,7 @@ class WordPracticeApp:
             logger.debug(f"Transcription: {transcription}, Target: {self.current_word.get('japanese', '')}, Is correct: {is_correct}")
             
             # Submit result to backend
-            self.submit_result(is_correct, session_id)
+            self.submit_result(is_correct)
             
             logger.info(f"Grading complete: {result}")
             
@@ -83,17 +80,17 @@ class WordPracticeApp:
             logger.error(f"Error in grade_submission: {str(e)}")
             return "Error processing submission", "Error: " + str(e)
 
-    def submit_result(self, is_correct, session_id):
+    def submit_result(self, is_correct):
         """Submit the result to the backend"""
         try:
             if not self.current_word:
                 return
-                
+            session_id = self.session_id or -1
             # session_id = qp.get("session_id", -1)
             if not session_id:
                 logger.warning("No session ID found, skipping result submission")
                 return
-                
+            logger.info(f"Submitting result: is_correct={is_correct} and session id={session_id}")
             url = f"http://localhost:4999/api/study-sessions/{session_id}/review"
             data = {
                 "word_id": self.current_word.get('id'),

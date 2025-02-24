@@ -1,10 +1,14 @@
 import gradio as gr
 import requests
-import json
+
 import random
 import logging
+# from fastapi import FastAPI
+from starlette.requests import Request
+# from fastapi.middleware.cors import CORSMiddleware
+
 from openai import OpenAI
-import os
+
 import dotenv
 import yaml
 from word import WordPracticeApp  # Add this import
@@ -32,17 +36,16 @@ class JapaneseWritingApp:
         self.current_word = None
         self.current_sentence = None
         self.mocr = None
-        self.load_vocabulary()
         # Initialize word practice with shared vocabulary
-        self.word_practice = WordPracticeApp(self.vocabulary)
+        self.word_practice = WordPracticeApp()
 
-    def load_vocabulary(self):
+    def load_vocabulary(self, group_id):
         """Load vocabulary from API"""
         logger.debug("Loading vocabulary from API")
         """Fetch vocabulary from API using group_id"""
         try:
             # Get group_id from environment variable or use default
-            group_id = 1
+            group_id = group_id or "1"
             url = f"http://localhost:4999/api/groups/{group_id}/words/raw"
             logger.debug(f"Fetching vocabulary from: {url}")
             
@@ -163,7 +166,17 @@ class JapaneseWritingApp:
             return "Error processing submission", "Error processing submission", "C", f"An error occurred: {str(e)}"
 
 def create_ui():
-    # Initialize app with query parameters
+    # Get query parameters from the URL
+    def get_query_params(request: Request = None):
+        if request:
+            # Get query parameters from the request
+            session_id = request.query_params.get("session_id", "default")
+            group_id = request.query_params.get("group_id", "1")
+            # Log the parameters
+            logger.info(f"Request received with session_id: {session_id}, group_id: {group_id}")
+            return session_id, group_id
+        return "default", "1"
+
     app = JapaneseWritingApp()
     word_app = app.word_practice
     custom_css = """
@@ -288,7 +301,7 @@ def create_ui():
         )
         
         def handle_word_submission(image):
-            return word_app.grade_submission(image, 20)
+            return word_app.grade_submission(image)
         
         word_submit.click(
             fn=handle_word_submission,
@@ -296,7 +309,24 @@ def create_ui():
             outputs=[word_transcription, word_grade]
         )
 
+        # Modify your event handlers to use these parameters
+        def initialize_app(request: gr.Request):
+            logger.info(f"Initializing app with request: {request}")
+            session_id, group_id = get_query_params(request)
+            logger.info(f"Initialized with session_id: {session_id}, group_id: {group_id}")
+            # You can now use these parameters to initialize your app
+            app.load_vocabulary(group_id)
+            word_app.vocabulary = app.vocabulary
+            word_app.session_id = session_id
+            # app.group_id = group_id
+            return None
+
+        # Add this to your interface loading
+        interface.load(fn=initialize_app, inputs=None, outputs=None)
+
     return interface
+
+# Create the Gradio interface
 
 if __name__ == "__main__":
     interface = create_ui()
