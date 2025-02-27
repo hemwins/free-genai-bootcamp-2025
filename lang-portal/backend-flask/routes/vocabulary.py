@@ -15,6 +15,16 @@ def load(app):
 
             if not category or not vocabulary:
                 return jsonify({"error": "Category and vocabulary data are required"}), 400
+            # Validate required fields
+            for item in vocabulary:
+                kanji = item.get('kanji')
+                romaji = item.get('romaji')
+                english = item.get('english')
+                parts = json.dumps(item.get('parts'))
+            required_fields = ['kanji', 'romaji', 'english', 'parts']
+            if not all(field in vocabulary for field in required_fields):
+                app.logger.warning(f"Missing required vocabulary fields in request: {vocabulary}")
+                return jsonify({"error": "Missing required vocabulary fields"}), 400
 
             cursor = app.db.cursor()
 
@@ -36,6 +46,7 @@ def load(app):
                 app.db.commit()
 
             new_words_added = 0
+            
             # Process each word in the vocabulary
             for item in vocabulary:
                 kanji = item.get('kanji')
