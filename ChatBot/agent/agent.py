@@ -33,7 +33,9 @@ class HindiLearningAgent:
             
             # Initialize LangChain components first
             self.memory = ConversationBufferMemory(
-                memory_key="chat_history", return_messages=True)
+                memory_key="chat_history",
+                input_key="input",
+                return_messages=True)
 
             # Initialize models
             self.embedding_model = FastTextEmbedding()  # Local FastText model
@@ -79,6 +81,9 @@ class HindiLearningAgent:
             prompt=agent_prompt
         )
         
+        # Initialize empty agent_scratchpad
+        self.agent_scratchpad = ""
+        
         # Custom output parser for the agent
         class HindiTutorOutputParser(AgentOutputParser):
             def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
@@ -88,14 +93,29 @@ class HindiLearningAgent:
                         log=text
                     )
                 
-                action_match = text.split("Action:", 1)[1].split("\n")[0].strip()
-                action_input_match = text.split("Action Input:", 1)[1].split("\n")[0].strip()
+                # Check if text contains required action parts
+                if "Action:" not in text or "Action Input:" not in text:
+                    # If missing required parts, treat as final answer
+                    return AgentFinish(
+                        return_values={"output": text.strip()},
+                        log=text
+                    )
                 
-                return AgentAction(
-                    tool=action_match,
-                    tool_input=action_input_match,
-                    log=text
-                )
+                try:
+                    action_match = text.split("Action:", 1)[1].split("\n")[0].strip()
+                    action_input_match = text.split("Action Input:", 1)[1].split("\n")[0].strip()
+                    
+                    return AgentAction(
+                        tool=action_match,
+                        tool_input=action_input_match,
+                        log=text
+                    )
+                except (IndexError, ValueError):
+                    # If parsing fails, treat as final answer
+                    return AgentFinish(
+                        return_values={"output": text.strip()},
+                        log=text
+                    )
         
         agent = LLMSingleActionAgent(
             llm_chain=llm_chain,
@@ -147,10 +167,17 @@ class HindiLearningAgent:
                 word=word,
                 correctness="correct" if self._check_answer_similarity(answer, word) else "incorrect"
             )
+            # Reset agent_scratchpad for new interaction
+            self.agent_scratchpad = ""
+            
             result = self.agent_chain.invoke({
                 "input": prompt,
-                "agent_scratchpad": ""
+                "agent_scratchpad": self.agent_scratchpad
             })
+            
+            # Update agent_scratchpad with the result
+            if isinstance(result.get("output"), str):
+                self.agent_scratchpad = result["output"]
             is_correct = "correct" in result["output"].lower()
             
             if is_correct:
@@ -171,10 +198,17 @@ class HindiLearningAgent:
                 num_hints=3,
                 word=word
             )
+            # Reset agent_scratchpad for new interaction
+            self.agent_scratchpad = ""
+            
             result = self.agent_chain.invoke({
                 "input": prompt,
-                "agent_scratchpad": ""
+                "agent_scratchpad": self.agent_scratchpad
             })
+            
+            # Update agent_scratchpad with the result
+            if isinstance(result.get("output"), str):
+                self.agent_scratchpad = result["output"]
             return {"hints": result["output"]}
             
         elif action == "summarize_session":
@@ -185,14 +219,26 @@ class HindiLearningAgent:
                 incorrect_count=self.learning_history["total_incorrect"],
                 learned_words=", ".join(self.learning_history["correct"])
             )
+            # Reset agent_scratchpad for new interaction
+            self.agent_scratchpad = ""
+            
             result = self.agent_chain.invoke({
                 "input": prompt,
-                "agent_scratchpad": ""
+                "agent_scratchpad": self.agent_scratchpad
             })
+            
+            # Update agent_scratchpad with the result
+            if isinstance(result.get("output"), str):
+                self.agent_scratchpad = result["output"]
+            # Update total words learned before returning summary
+            self.learning_history["total_words_learned"] = len(self.learning_history["correct"])
+            self._save_learning_history()
+            
             return {
                 "correct_answers": self.learning_history["total_correct"],
                 "incorrect_answers": self.learning_history["total_incorrect"],
                 "words_learned": self.learning_history["correct"],
+                "total_words_learned": self.learning_history["total_words_learned"],
                 "summary_message": result["output"]
             }
 
@@ -202,11 +248,17 @@ class HindiLearningAgent:
         if os.path.exists(history_file):
             with open(history_file, 'r') as f:
                 return json.load(f)
-        return {"correct": [], "incorrect": [], "total_correct": 0, "total_incorrect": 0}
+        return {"correct": [], "incorrect": [], "total_correct": 0, "total_incorrect": 0, "total_words_learned": 0}
 
     def _save_learning_history(self):
         """Save student's learning history."""
         history_file = f"data/learning_history_{self.student_id}.json"
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(history_file), exist_ok=True)
+        
+        # Update total words learned count
+        self.learning_history["total_words_learned"] = len(self.learning_history["correct"])
+        
         with open(history_file, 'w') as f:
             json.dump(self.learning_history, f)
 

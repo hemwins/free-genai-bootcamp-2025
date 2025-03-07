@@ -94,8 +94,9 @@ try:
         st.subheader("📊 Session Summary")
         st.write(f"✅ Correct Answers: {summary['correct_answers']}")
         st.write(f"❌ Incorrect Attempts: {summary['incorrect_answers']}")
-        st.snow()
-        st.write(f"📚 Words Learned: {', '.join(summary['words_learned'])}")
+        st.write(f"📚 Total Words Learned: {len(summary['words_learned'])}")
+        if summary['words_learned']:
+            st.write(f"📝 Words Mastered: {', '.join(summary['words_learned'])}")
         st.success("Thank you and Bye! 👋")
         st.stop()
 except Exception as e:
