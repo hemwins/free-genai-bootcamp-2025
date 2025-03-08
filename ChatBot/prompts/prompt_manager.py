@@ -56,4 +56,4 @@ class HindiTutorPromptManager:
         
         prompt_file = Path(__file__).parent / "hindi_tutor_prompts.json"
         with open(prompt_file, 'w') as f:
-            json.dump(prompt_data, f, indent=4) 
+            json.dump(prompt_data, f, indent=4)

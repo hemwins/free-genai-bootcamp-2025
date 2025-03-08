@@ -13,59 +13,55 @@ import os
 # Initialize logger
 logger = get_logger(__name__)
 
-def show_session_summary():
-    """Show the session summary and stop the application"""
-    logger.info(f"Session ended for student: {st.session_state.student_id}")
-    summary = agent.summarize_session()
-    st.subheader("📊 आज का प्रदर्शन")
-    st.write(f"✅ सही जवाब: {summary['correct_answers']}")
-    st.write(f"❌ त्रुटियाँ: {summary['incorrect_answers']}")
-    st.write(f"📚 कितना सीखा: {len(summary['words_learned'])}")
-    if summary['words_learned']:
-        st.write(f"📝 नए शब्द: {', '.join(summary['words_learned'])}")
-    st.success("फिर मिलेंगे! 👋")
-    st.stop()
-
 def init_session():
     """Initialize session state and return agent instance"""
-    # Set up page first
-    st.set_page_config(page_title="हिंदी सीखें", layout="centered")
-    st.title("🇮🇳 चलो, हिंदी सीखें 📔")
+    if "student_id" not in st.session_state:
+        st.session_state.student_id = f"student_{random.randint(1000, 9999)}"
+        logger.info(f"New session started with student_id: {st.session_state.student_id}")
     
-    if "initialization_stage" not in st.session_state:
-        st.session_state.initialization_stage = "start"
+    if "agent" not in st.session_state:
+        try:
+            logger.debug("Initializing HindiLearningAgent")
+            st.session_state.agent = HindiLearningAgent(st.session_state.student_id)
+            logger.info("Agent initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize agent: {str(e)}\n{traceback.format_exc()}")
+            st.error("Failed to initialize the learning agent. Please try again or contact support.")
+            st.stop()
+
+def clear_text_input():
+    """Clear the text input field."""
+    st.session_state.user_answer = ""
+
+def display_summary():
+    """Display the session summary."""
+    logger.info(f"Session ended for student: {st.session_state.student_id}")
+    summary = agent.summarize_session()
     
-    if st.session_state.initialization_stage == "start":
-        # Show loading message
-        with st.spinner("⚡ आपका स्वागत है! रुको थोड़ा..."):
-            # Initialize student ID
-            if "student_id" not in st.session_state:
-                st.session_state.student_id = f"student_{random.randint(1000, 9999)}"
-                logger.info(f"New session started with student_id: {st.session_state.student_id}")
-            
-            # Initialize agent
-            if "agent" not in st.session_state:
-                try:
-                    logger.debug("Initializing HindiLearningAgent")
-                    st.session_state.agent = HindiLearningAgent(st.session_state.student_id)
-                    logger.info("Agent initialized successfully")
-                    st.session_state.initialization_stage = "complete"
-                    st.rerun()
-                except Exception as e:
-                    logger.error(f"Failed to initialize agent: {str(e)}\n{traceback.format_exc()}")
-                    st.error("Failed to initialize the learning agent. Please try again or contact support.")
-                    st.stop()
+    clear_text_input()  # Clear the text input when the session summary is displayed
+    # Clear the page
+    st.empty()
+    
+    # Display the summary in the center of the page
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    st.subheader("📊 आज का प्रदर्शन")
+    st.write(f"✅ सही जवाब: {summary.get('correct_answers', 0)}")
+    st.write(f"❌ त्रुटियाँ: {summary.get('incorrect_answers', 0)}")
+    st.write(f"📚 कितना सीखा: {len(summary.get('words_learned', []))}")
+    if summary.get('words_learned'):
+        st.write(f"📝 नए शब्द: {', '.join(summary['words_learned'])}")
+    st.success("फिर मिलेंगे! 👋")
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
 
 # Initialize session
 init_session()
-
-# Only proceed if initialization is complete
-if st.session_state.initialization_stage != "complete":
-    st.stop()
-
 agent = st.session_state.agent
 
 try:
+    # Streamlit UI Setup
+    st.set_page_config(page_title="हिंदी सीखें", layout="centered")
+    st.title("🇮🇳 चलो, हिंदी सीखें 📔")
     st.write("सही जवाब दो तो गुब्बारे लो! 🎈")
 
     # Fetch a new word for the student
@@ -77,6 +73,7 @@ try:
                 st.session_state.current_word = new_word
                 st.session_state.new_word_needed = False
                 logger.info(f"New word selected: {new_word}")
+                clear_text_input()  # Clear the text input when a new word is fetched
             else:
                 # Try to initialize the database with words if it's empty
                 logger.info("No words found, attempting to initialize database")
@@ -108,7 +105,7 @@ try:
     if not st.session_state.show_hints:
         user_answer = st.text_input("बताओ:", key="user_answer")
 
-        if st.button("मेरा जवाब"):
+        if st.button("जवाब"):
             if user_answer.strip():
                 logger.debug(f"Checking answer: {user_answer} for word: {st.session_state.current_word}")
                 is_correct = agent.check_answer(user_answer.strip(), st.session_state.current_word)
@@ -125,27 +122,19 @@ try:
                     st.success("वाह! बहुत खूब!")
                     st.balloons()
                     
-                    # Ask if student wants to continue learning
-                    st.write("क्या आप और सीखना चाहेंगे?")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("✨ हाँ, और सीखें!", key="continue_yes"):
-                            st.session_state.new_word_needed = True
-                            st.session_state.show_hints = False
-                            st.rerun()
-                    with col2:
-                        # Show session summary when student chooses to stop
-                        if st.button("🔚 नहीं, बस", key="continue_no"):
-                            # Get and display the session summary
-                            summary = agent.summarize_session()
-                            st.subheader("📊 आज का प्रदर्शन")
-                            st.write(f"✅ सही जवाब: {summary['correct_answers']}")
-                            st.write(f"❌ त्रुटियाँ: {summary['incorrect_answers']}")
-                            st.write(f"📚 कितना सीखा: {len(summary['words_learned'])}")
-                            if summary['words_learned']:
-                                st.write(f"📝 नए शब्द: {', '.join(summary['words_learned'])}")
-                            st.success("फिर मिलेंगे! 👋")
-                            st.stop()
+                    # Ask if the student wants to learn more
+                    if "learn_more" not in st.session_state:
+                        st.session_state.learn_more = st.radio(
+                            "क्या अगला शब्द सीखना चाहोगे?",
+                            ("हाँ", "नहीं"),
+                            key="learn_more"
+                        )
+                    
+                    if st.session_state.learn_more == "हाँ":
+                        st.session_state.new_word_needed = True
+                        st.session_state.show_hints = False
+                    else:
+                        display_summary()  # Display summary when the student selects "नहीं"
                 else:
                     logger.info(f"Incorrect answer: {user_answer} for word: {st.session_state.current_word}")
                     st.error("❌ ओहो! थोड़ा और सोचो:")
@@ -160,7 +149,7 @@ try:
         hint_result = agent.get_hint(st.session_state.current_word)
         
         # Display contextual hint
-        st.info(f"💡 मदद: {hint_result['hint']}")
+        st.info(f"💡 मदद: {hint_result.get('hint')}")
         
         # Display multiple choice options with buttons
         st.write("शायद इनमें से कोई हो:")
@@ -183,39 +172,19 @@ try:
                             
                         st.success("वाह! बहुत खूब!")
                         st.balloons()
-                        
-                        # Ask if student wants to continue learning
-                        st.write("क्या आप और सीखना चाहेंगे?")
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.button("✨ हाँ, और सीखें!", key="continue_yes_mc"):
-                                st.session_state.new_word_needed = True
-                                st.session_state.show_hints = False
-                                st.rerun()
-                        with col2:
-                            # Show session summary when student chooses to stop
-                            if st.button("🔚 नहीं, बस", key="continue_no_mc"):
-                                # Get and display the session summary
-                                summary = agent.summarize_session()
-                                st.subheader("📊 आज का प्रदर्शन")
-                                st.write(f"✅ सही जवाब: {summary['correct_answers']}")
-                                st.write(f"❌ त्रुटियाँ: {summary['incorrect_answers']}")
-                                st.write(f"📚 कितना सीखा: {len(summary['words_learned'])}")
-                                if summary['words_learned']:
-                                    st.write(f"📝 नए शब्द: {', '.join(summary['words_learned'])}")
-                                st.success("फिर मिलेंगे! 👋")
-                                st.stop()
+                        st.session_state.new_word_needed = True
+                        st.session_state.show_hints = False
+                        st.rerun()
                     else:
                         st.error("❌ ओहो! यह भी नहीं...")
         
         # Add a button to go back to text input
         st.button("नया जवाब लिखें", on_click=lambda: setattr(st.session_state, 'show_hints', False))
 
-
-
-    # Quit option - only show the main quit button
+    # Quit option
     if st.button("अब बस"):
-        show_session_summary()
+        display_summary()  # Display summary when the "अब बस" button is clicked
+
 except Exception as e:
     logger.error(f"Application error: {str(e)}", exc_info=True)
     st.error("An error occurred. Please try again or contact support.")

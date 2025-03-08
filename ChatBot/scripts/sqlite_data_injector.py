@@ -21,7 +21,7 @@ class SQLiteDataInjector:
         
         Data format expected:
         {
-            "hindi_word": [[synonyms], confidence_score, difficulty_level, category],
+            "hindi_word": [[synonyms], confidence_score, learned, category],
             ...
         }
         """
@@ -33,16 +33,16 @@ class SQLiteDataInjector:
                 
                 for hindi_word, details in data.items():
                     try:
-                        synonyms, confidence_score, difficulty_level, category = details
+                        synonyms, confidence_score, learned, category = details
                         
                         # Generate a unique word_id
                         word_id = str(uuid.uuid4())
                         
                         # Insert into words table
                         cursor.execute("""
-                            INSERT INTO words (word_id, hindi_word, difficulty_level, category)
+                            INSERT INTO words (word_id, hindi_word, learned, category)
                             VALUES (?, ?, ?, ?)
-                        """, (word_id, hindi_word, difficulty_level, category))
+                        """, (word_id, hindi_word, learned, category))
                         
                         print(f"✅ Added word: {hindi_word}")
                         
@@ -91,7 +91,7 @@ class SQLiteDataInjector:
                 
                 # Check words table
                 cursor.execute("""
-                    SELECT w.hindi_word, w.category, w.difficulty_level,
+                    SELECT w.hindi_word, w.category, w.learned,
                            GROUP_CONCAT(s.synonym) as synonyms
                     FROM words w
                     LEFT JOIN synonyms s ON w.word_id = s.word_id
@@ -103,10 +103,10 @@ class SQLiteDataInjector:
                 
                 print("\nSample entries:")
                 for row in rows:
-                    word, category, difficulty, synonyms = row
+                    word, category, learned, synonyms = row
                     print(f"\nWord: {word}")
                     print(f"Category: {category}")
-                    print(f"Difficulty: {difficulty}")
+                    print(f"learned: {learned}")
                     print(f"Synonyms: {synonyms}")
                     
         except Exception as e:

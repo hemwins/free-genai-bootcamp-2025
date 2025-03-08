@@ -30,39 +30,25 @@ class FastTextEmbedding:
     def __init__(self):
         self._setup_logging()
         
-        # Setup paths
+        # Load FastText model via LangChain wrapper
         self.model_path = "cc.hi.300.bin"  # Ensure this file is downloaded
         self.embedding_dim = 300
+        self.embeddings = FastTextEmbeddings(self.model_path)
+
+        # Setup database paths
         self.db_dir = Path("database")
         self.sqlite_path = self.db_dir / "hindi_tutor.db"
         self.chroma_path = self.db_dir / "chroma_db"
         
-        # Initialize placeholders for lazy loading
-        self._embeddings = None
-        self._vector_store = None
-        self.logger.info("FastTextEmbedding paths initialized")
+        # Initialize Chroma vector store
+        self.vector_store = Chroma(
+            persist_directory=str(self.chroma_path),
+            embedding_function=self.embeddings,
+            collection_name="hindi_words"
+        )
         
-    @property
-    def embeddings(self):
-        """Lazy load embeddings"""
-        if self._embeddings is None:
-            self.logger.info("Loading FastText model...")
-            self._embeddings = FastTextEmbeddings(self.model_path)
-        return self._embeddings
-    
-    @property
-    def vector_store(self):
-        """Lazy load vector store"""
-        if self._vector_store is None:
-            self.logger.info("Initializing vector store...")
-            self._vector_store = Chroma(
-                persist_directory=str(self.chroma_path),
-                embedding_function=self.embeddings,
-                collection_name="hindi_words"
-            )
-            # Sync databases only when vector store is first accessed
-            self._sync_databases()
-        return self._vector_store
+        self.logger.info("FastTextEmbedding initialized successfully")
+        self._sync_databases()
     
     def _setup_logging(self):
         self.logger = logging.getLogger('hindi_tutor')
@@ -80,17 +66,17 @@ class FastTextEmbedding:
         self.logger.addHandler(fh)
         self.logger.addHandler(ch)
 
-    def _get_exact_match_embedding(self, text: str) -> np.ndarray:
+    def _get_exact_match_embedding(self, text: str) -> bool:
         """Get embedding from vector store."""
         try:
             results = self.vector_store.similarity_search_with_score(text, k=1)
             if results:
                 doc, score = results[0]
                 if score > 0.95:  # Very high similarity threshold for exact match
-                    return np.array(self.embeddings.embed_query(text))
+                    return True
         except Exception:
             pass
-        return None
+        return False
     
     def _sync_databases(self):
         """Sync words and synonyms from SQLite to ChromaDB."""
@@ -120,16 +106,6 @@ class FastTextEmbedding:
     def add_word_with_synonyms(self, word: str, synonyms: List[str]) -> None:
         """Add word and its synonyms to both SQLite and vector store."""
         try:
-            # Add to SQLite
-            with sqlite3.connect(self.sqlite_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO words (hindi_word) VALUES (?)", (word,))
-                word_id = cursor.lastrowid
-                for synonym in synonyms:
-                    cursor.execute("INSERT INTO synonyms (word_id, synonym) VALUES (?, ?)", 
-                                 (word_id, synonym))
-                conn.commit()
-            
             # Add to vector store with proper metadata
             # Add the main word
             self.vector_store.add_texts(

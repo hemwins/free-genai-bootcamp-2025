@@ -1,9 +1,5 @@
 import os
 from typing import List, Dict, Optional
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage

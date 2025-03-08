@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS words (
     word_id TEXT PRIMARY KEY,
     hindi_word TEXT NOT NULL,
-    difficulty_level INTEGER,
+    learned INTEGER,
     category TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_used TIMESTAMP,
