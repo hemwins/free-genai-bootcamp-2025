@@ -1,0 +1,48 @@
+hindi-learning-agent/
+│
+│── app.py                         # Streamlit UI & user interaction  
+│── requirements.txt               # Dependencies (LangChain, Streamlit, ChromaDB, etc.)  
+│── README.md                      # Project documentation  
+│── .env                            # API keys (OpenAI, etc.)
+├── agent/
+│   ├── __init__.py
+│   ├── agent.py                # Main agent implementation
+│   └── utils.py                # Agent utility functions
+│
+├── database/
+│   ├── __init__.py
+│   ├── db_manager.py           # Database management class
+│   ├── hindi_tutor.db          # SQLite database
+│   └── chroma_db/              # ChromaDB files
+│
+├── models/
+│   ├── __init__.py
+│   ├── embedding_model.py      # FastText implementation
+│   └── generative_model.py     # gpt 4o-mini implementation
+│
+├── prompts/
+│   ├── __init__.py
+│   ├── prompt_manager.py       # Prompt management class
+│   └── hindi_tutor_prompts.json # Prompt templates
+│
+├── scripts/
+│   ├── __init__.py
+│   ├── create_tables.sql       # Database schema
+│   ├── verify_setup.py         # Setup verification
+│   └── populate_data.py        # Initial data population
+│
+├── data/
+│   ├── hindi_words.json        # Hindi words and synonyms
+│   └── learning_history/       # Student learning histories
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_agent.py
+│   ├── test_models.py
+│   └── test_database.py
+│
+├── .env                        # Environment variables
+├── .gitignore                 # Git ignore file
+├── README.md                  # Project documentation
+├── requirements.txt           # Project dependencies
+└── setup.py                   # Package setup file

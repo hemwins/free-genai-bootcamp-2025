@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 
+from flask import logging
+
 class Config:
     
     # Base directory of the application

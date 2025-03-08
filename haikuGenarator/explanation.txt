@@ -1,0 +1,37 @@
+In the current architecture of the Haiku Image Muse application, there's no traditional separation between backend and frontend as it's built as a client-side only application.
+Current Architecture
+Frontend
+
+    React components for UI rendering (src/components/*)
+    State management with React hooks
+    User interaction handling
+    API calls to external services (Hugging Face)
+    The entire application runs in the browser
+
+"Backend-like" Functionality
+
+    The application doesn't have a traditional backend server
+    Database operations are handled client-side using SQL.js (SQLite in the browser)
+    Data is persisted using the browser's localStorage
+    External API calls are made directly from the browser to Hugging Face
+
+This architecture is what's known as a "serverless" or "client-side only" application where traditional backend services are replaced by:
+
+    Browser-based storage (SQLite via SQL.js and localStorage)
+    Direct API calls to third-party services (Hugging Face)
+
+How to Run the App
+
+To run the application:
+
+    npm run dev
+
+    Access the application at http://localhost:8080
+
+Debugging
+
+Since there's no separate backend server, you can debug the entire application using browser developer tools:
+
+    Use the Console for logging
+    Use the Network tab to monitor API calls to Hugging Face
+    Use the Application tab to inspect localStorage and IndexedDB storage
