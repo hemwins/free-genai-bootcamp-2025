@@ -1,15 +1,16 @@
-from langchain.agents import AgentExecutor, Tool, create_react_agent
+from langchain_core.tools import Tool
 from langchain_core.prompts import PromptTemplate
 from langchain_core.agents import AgentAction, AgentFinish
-from langchain.agents import LLMSingleActionAgent
+from langchain_core.memory import BaseMemory
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import LLMChain
+from langchain_core.runnables import RunnablePassthrough
+import sqlite3
 import chromadb
 import json
 import os
 import requests
 import traceback
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Any
 from .utils import load_hindi_words
 from models.embedding_model import FastTextEmbedding
 from models.generative_model import GenerativeModel
@@ -18,7 +19,6 @@ from database.db_manager import DatabaseManager
 from utils.config import config
 from utils.logger import get_logger
 import time
-from langchain.agents import AgentOutputParser
 
 class HindiLearningAgent:
     def __init__(self, student_id: str):
@@ -27,23 +27,23 @@ class HindiLearningAgent:
         self.logger.info(f"Initializing HindiLearningAgent for student: {student_id}")
         
         try:
+            # Initialize core components
             self.db = DatabaseManager()
-            # Initialize prompt manager
             self.prompt_manager = HindiTutorPromptManager()
+            self.embedding_model = FastTextEmbedding()  # Local FastText model
+            self.generative_model = GenerativeModel()
             
-            # Initialize LangChain components first
+            # Initialize memory
             self.memory = ConversationBufferMemory(
                 memory_key="chat_history",
                 input_key="input",
-                return_messages=True)
-
-            # Initialize models
-            self.embedding_model = FastTextEmbedding()  # Local FastText model
-            self.generative_model = GenerativeModel()  
+                return_messages=True,
+                output_key="output"
+            )
             
-            self.learning_history = self._load_learning_history()
+            # Initialize agent components
             self.tools = self._initialize_tools()
-            self.agent_chain = self._setup_agent_chain()
+            self.agent_executor = self._setup_agent_executor()
             
             self.logger.info("HindiLearningAgent initialized successfully")
             
@@ -67,223 +67,225 @@ class HindiLearningAgent:
             Tool(
                 name="hint_generator",
                 func=self._generate_hints,
-                description="Generate contextual hints using gpt4o-mini"
+                description="Generate a list of 4 words from vector database, one of which is correct answer, along with contextual hints using GPT-4o-mini"
             )
         ]
 
-    def _setup_agent_chain(self) -> AgentExecutor:
-        # Get the base prompt from prompt manager
-        agent_prompt = self.prompt_manager.get_prompt("agent_base_prompt")
+    def _setup_agent_executor(self) -> RunnablePassthrough:
+        """Setup the agent executor using the new LangChain Expression Language (LCEL)."""
+        # Get base prompt from prompt manager
+        base_prompt = self.prompt_manager.get_prompt("agent_base_prompt")
         
-        # Create an LLMChain for the agent chain
-        llm_chain = LLMChain(
-            llm=self.generative_model.llm,
-            prompt=agent_prompt
+        # Define the agent's chain of operations
+        agent_chain = (
+            {
+                "input": lambda x: x["input"],
+                "chat_history": lambda x: self.memory.load_memory_variables(x)["chat_history"],
+                "tools": lambda _: [tool.dict() for tool in self.tools]
+            }
+            | base_prompt
+            | self.generative_model.llm
+            | self._parse_agent_output
         )
         
-        # Initialize empty agent_scratchpad
-        self.agent_scratchpad = ""
+        return agent_chain
+    
+    def _parse_agent_output(self, text: str) -> Union[AgentAction, AgentFinish]:
+        """Parse the agent's output text into an action or final answer."""
+        # Check for final answer first
+        if "Final Answer:" in text:
+            return AgentFinish(
+                return_values={"output": text.split("Final Answer:")[-1].strip()},
+                log=text
+            )
         
-        # Custom output parser for the agent
-        class HindiTutorOutputParser(AgentOutputParser):
-            def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
-                if "Final Answer:" in text:
-                    return AgentFinish(
-                        return_values={"output": text.split("Final Answer:")[-1].strip()},
-                        log=text
-                    )
+        # Try to parse action and input
+        try:
+            if "Action:" in text and "Action Input:" in text:
+                action = text.split("Action:", 1)[1].split("\n")[0].strip()
+                action_input = text.split("Action Input:", 1)[1].split("\n")[0].strip()
                 
-                # Check if text contains required action parts
-                if "Action:" not in text or "Action Input:" not in text:
-                    # If missing required parts, treat as final answer
-                    return AgentFinish(
-                        return_values={"output": text.strip()},
-                        log=text
-                    )
-                
-                try:
-                    action_match = text.split("Action:", 1)[1].split("\n")[0].strip()
-                    action_input_match = text.split("Action Input:", 1)[1].split("\n")[0].strip()
-                    
-                    return AgentAction(
-                        tool=action_match,
-                        tool_input=action_input_match,
-                        log=text
-                    )
-                except (IndexError, ValueError):
-                    # If parsing fails, treat as final answer
-                    return AgentFinish(
-                        return_values={"output": text.strip()},
-                        log=text
-                    )
+                return AgentAction(
+                    tool=action,
+                    tool_input=action_input,
+                    log=text
+                )
+        except Exception as e:
+            self.logger.warning(f"Failed to parse agent output: {e}")
         
-        agent = LLMSingleActionAgent(
-            llm_chain=llm_chain,
-            output_parser=HindiTutorOutputParser(),
-            tools=self.tools,
-            max_iterations=3,
-            stop=["Final Answer:"]
-        )
-        
-        return AgentExecutor.from_agent_and_tools(
-            agent=agent,
-            tools=self.tools,
-            memory=self.memory,
-            verbose=True
+        # Default to treating as final answer if parsing fails
+        return AgentFinish(
+            return_values={"output": text.strip()},
+            log=text
         )
 
     def _select_next_word(self, input_data: str) -> Optional[str]:
-        """Tool: Select next unlearned word using FastText embeddings."""
-        learned_words = self.learning_history["correct"]
-        unlearned_words = self.embedding_model.get_unlearned_words(learned_words)
-        return unlearned_words[0] if unlearned_words else None
+        """Tool: Select next unlearned word from SQLite database.
+        
+        The learning status (unlearned/learned) is tracked in SQLite using the learning_history table.
+        ChromaDB is populated from SQLite and only used for word embeddings and similarity search.
+        """
+        try:
+            # Get unlearned words from SQLite database using learning_history
+            unlearned_words = self.db.get_unlearned_words(self.student_id)
+            
+            # If no unlearned words, check if student has learned everything
+            if not unlearned_words:
+                self.logger.info("No unlearned words found, checking if all words are learned")
+                
+                # Check total words in SQLite
+                with sqlite3.connect(self.db.sqlite_path) as conn:
+                    word_count = conn.execute("SELECT COUNT(*) FROM words").fetchone()[0]
+                
+                if word_count > 0:
+                    self.logger.info(f"Student has learned all {word_count} available words")
+                else:
+                    self.logger.warning("No words found in database - please populate SQLite first")
+                return None
+            
+            # Return the first unlearned word
+            selected_word = unlearned_words[0]['hindi_word']
+            self.logger.info(f"Selected unlearned word: {selected_word} from SQLite database")
+            return selected_word
+            
+        except Exception as e:
+            self.logger.error(f"Error selecting next word from SQLite: {e}")
+            return None
 
     def _check_answer_similarity(self, answer: str, word: str) -> bool:
         """Tool: Check answer using FastText similarity."""
         is_match, similarity = self.embedding_model.find_closest_match(answer, word)
         return is_match
 
-    def _generate_hints(self, word: str) -> List[str]:
-        """Tool: Generate hints using gpt-4o-mini."""
-        word_data = self.embedding_model.collection.get(
-            where={"type": "main_word", "documents": word}
-        )
-        correct_synonym = word_data["metadatas"][0]["synonyms"][0]
-        return self.generative_model.generate_hints(word, correct_synonym)
+    def _generate_hints(self, word: str) -> Dict[str, Union[List[str], str]]:
+        """Tool: Generate multiple-choice options and contextual hints using gpt-4o-mini."""
+        # Get 3 similar words from vector store
+        similar_words = self.embedding_model.get_similar_words(word, k=3)
+        
+        # Create multiple choice options with the correct word and similar words
+        options = similar_words + [word]
+        
+        # Generate contextual hint using GPT-4o-mini
+        hint = self.generative_model.generate_hints(word)
+        
+        return {
+            "options": options,
+            "hint": hint
+        }
 
     def process_student_interaction(self, action: str, **kwargs) -> Dict:
-        """Process student interaction using the LangChain agent."""
-        if action == "get_new_word":
-            result = self._select_next_word("")
-            return {"word": result}
-            
-        elif action == "check_answer":
-            answer = kwargs.get("answer")
-            word = kwargs.get("word")
-            # Use the answer feedback prompt
-            prompt = self.prompt_manager.format_prompt(
-                "answer_feedback",
-                answer=answer,
-                word=word,
-                correctness="correct" if self._check_answer_similarity(answer, word) else "incorrect"
-            )
-            # Reset agent_scratchpad for new interaction
-            self.agent_scratchpad = ""
-            
-            result = self.agent_chain.invoke({
-                "input": prompt,
-                "agent_scratchpad": self.agent_scratchpad
-            })
-            
-            # Update agent_scratchpad with the result
-            if isinstance(result.get("output"), str):
-                self.agent_scratchpad = result["output"]
-            is_correct = "correct" in result["output"].lower()
-            
-            if is_correct:
-                self.learning_history["correct"].append(word)
-                self.learning_history["total_correct"] += 1
-            else:
-                self.learning_history["incorrect"].append(word)
-                self.learning_history["total_incorrect"] += 1
-            
-            self._save_learning_history()
-            return {"is_correct": is_correct, "feedback": result["output"]}
-            
-        elif action == "get_hint":
-            word = kwargs.get("word")
-            # Use the hint generation prompt
-            prompt = self.prompt_manager.format_prompt(
-                "hint_generation",
-                num_hints=3,
-                word=word
-            )
-            # Reset agent_scratchpad for new interaction
-            self.agent_scratchpad = ""
-            
-            result = self.agent_chain.invoke({
-                "input": prompt,
-                "agent_scratchpad": self.agent_scratchpad
-            })
-            
-            # Update agent_scratchpad with the result
-            if isinstance(result.get("output"), str):
-                self.agent_scratchpad = result["output"]
-            return {"hints": result["output"]}
-            
-        elif action == "summarize_session":
-            # Use the session summary prompt
-            prompt = self.prompt_manager.format_prompt(
-                "session_summary",
-                correct_count=self.learning_history["total_correct"],
-                incorrect_count=self.learning_history["total_incorrect"],
-                learned_words=", ".join(self.learning_history["correct"])
-            )
-            # Reset agent_scratchpad for new interaction
-            self.agent_scratchpad = ""
-            
-            result = self.agent_chain.invoke({
-                "input": prompt,
-                "agent_scratchpad": self.agent_scratchpad
-            })
-            
-            # Update agent_scratchpad with the result
-            if isinstance(result.get("output"), str):
-                self.agent_scratchpad = result["output"]
-            # Update total words learned before returning summary
-            self.learning_history["total_words_learned"] = len(self.learning_history["correct"])
-            self._save_learning_history()
-            
-            return {
-                "correct_answers": self.learning_history["total_correct"],
-                "incorrect_answers": self.learning_history["total_incorrect"],
-                "words_learned": self.learning_history["correct"],
-                "total_words_learned": self.learning_history["total_words_learned"],
-                "summary_message": result["output"]
+        """Process student interaction using the LangChain Expression Language (LCEL)."""
+        try:
+            # Prepare base input with memory
+            base_input = {
+                "chat_history": self.memory.load_memory_variables({}).get("chat_history", [])
             }
-
-    def _load_learning_history(self) -> Dict:
-        """Load student's learning history."""
-        history_file = f"data/learning_history_{self.student_id}.json"
-        if os.path.exists(history_file):
-            with open(history_file, 'r') as f:
-                return json.load(f)
-        return {"correct": [], "incorrect": [], "total_correct": 0, "total_incorrect": 0, "total_words_learned": 0}
-
-    def _save_learning_history(self):
-        """Save student's learning history."""
-        history_file = f"data/learning_history_{self.student_id}.json"
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(history_file), exist_ok=True)
-        
-        # Update total words learned count
-        self.learning_history["total_words_learned"] = len(self.learning_history["correct"])
-        
-        with open(history_file, 'w') as f:
-            json.dump(self.learning_history, f)
-
+            
+            if action == "get_new_word":
+                result = self._select_next_word("")
+                return {"word": result}
+                
+            elif action == "check_answer":
+                answer = kwargs.get("answer")
+                word = kwargs.get("word")
+                
+                # Check answer using FastText similarity
+                is_correct = self._check_answer_similarity(answer, word)
+                
+                # Get feedback using prompt
+                prompt = self.prompt_manager.format_prompt(
+                    "answer_feedback",
+                    answer=answer,
+                    word=word,
+                    correctness="correct" if is_correct else "incorrect"
+                )
+                base_input["input"] = prompt
+                
+                result = self.agent_executor.invoke(base_input)
+                feedback = result.get("output", "")
+                
+                # Save learning history to database
+                if word:
+                    try:
+                        # Get the word_id from database
+                        with sqlite3.connect(self.db.sqlite_path) as conn:
+                            conn.row_factory = sqlite3.Row
+                            word_record = conn.execute(
+                                "SELECT word_id FROM words WHERE hindi_word = ?", 
+                                (word,)
+                            ).fetchone()
+                            
+                            if word_record:
+                                # Save the learning interaction
+                                self.db.save_learning_history(
+                                    student_id=self.student_id,
+                                    word_id=word_record['word_id'],
+                                    answer=answer,
+                                    is_correct=is_correct,
+                                    session_id=str(uuid.uuid4())
+                                )
+                    except Exception as e:
+                        self.logger.error(f"Error saving learning history: {e}")
+                
+                return {"is_correct": is_correct, "feedback": feedback}
+                
+            elif action == "get_hint":
+                word = kwargs.get("word")
+                return self._generate_hints(word)
+            
+            else:
+                raise ValueError(f"Unknown action: {action}")
+                
+        except Exception as e:
+            self.logger.error(f"Error processing student interaction: {e}")
+            return {"error": str(e)}
+    
     def get_new_word(self) -> Optional[str]:
         """Get a new word for the student to learn."""
         result = self.process_student_interaction("get_new_word")
         return result.get("word")
-
+    
     def check_answer(self, answer: str, word: str) -> bool:
         """Check if the student's answer is correct."""
-        result = self.process_student_interaction(
-            "check_answer",
-            answer=answer,
-            word=word
-        )
-        return result.get("is_correct", False)
-
-    def get_hint(self, word: str) -> List[str]:
-        """Get hints for the current word."""
-        result = self.process_student_interaction(
-            "get_hint",
-            word=word
-        )
-        return result.get("hints", [])
-
-    def summarize_session(self) -> Dict:
-        """Get a summary of the current learning session."""
-        return self.process_student_interaction("summarize_session")
+        return self._check_answer_similarity(answer, word)
+    
+    def get_hint(self, word: str) -> Dict[str, Union[List[str], str]]:
+        """Get a hint for the current word."""
+        return self._generate_hints(word)
+    
+    def summarize_session(self) -> Dict[str, Any]:
+        """Summarize the student's learning session."""
+        try:
+            with sqlite3.connect(self.db.sqlite_path) as conn:
+                conn.row_factory = sqlite3.Row
+                
+                # Get correct and incorrect answers
+                stats = conn.execute("""
+                    SELECT 
+                        SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct_answers,
+                        SUM(CASE WHEN is_correct = 0 THEN 1 ELSE 0 END) as incorrect_answers
+                    FROM learning_history
+                    WHERE student_id = ?
+                """, (self.student_id,)).fetchone()
+                
+                # Get learned words
+                learned_words = conn.execute("""
+                    SELECT DISTINCT w.hindi_word
+                    FROM words w
+                    JOIN learning_history h ON w.word_id = h.word_id
+                    WHERE h.student_id = ? AND h.is_correct = 1
+                    ORDER BY h.created_at DESC
+                """, (self.student_id,)).fetchall()
+                
+                return {
+                    "correct_answers": stats["correct_answers"] or 0,
+                    "incorrect_answers": stats["incorrect_answers"] or 0,
+                    "words_learned": [row["hindi_word"] for row in learned_words]
+                }
+        except Exception as e:
+            self.logger.error(f"Error generating session summary: {e}", exc_info=True)
+            return {
+                "correct_answers": 0,
+                "incorrect_answers": 0,
+                "words_learned": []
+            }

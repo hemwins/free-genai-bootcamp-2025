@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import Dict, List
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 class HindiTutorPromptManager:
     def __init__(self):

@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS learning_history (
 CREATE INDEX IF NOT EXISTS idx_word_category ON words(category);
 CREATE INDEX IF NOT EXISTS idx_learning_history_session ON learning_history(session_id);
 CREATE INDEX IF NOT EXISTS idx_student_last_active ON students(last_active);
+CREATE INDEX IF NOT EXISTS idx_learning_history_student_word ON learning_history(student_id, word_id, is_correct);
 
 -- Create view for student performance analytics
 CREATE VIEW IF NOT EXISTS student_performance AS

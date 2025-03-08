@@ -1,15 +1,13 @@
 # Core dependencies
 streamlit>=1.32.0
-transformers>=4.37.0
-torch>=2.2.0
 numpy>=1.24.0
-chromadb>=0.4.0
-langchain-community
-langchain
+openai>=1.12.0
+langchain>=0.1.0
+langchain-community>=0.0.13
+langchain-openai>=0.0.5
 
 # Database
-sqlite3>=3.35.0
-chromaDB
+chromadb>=0.4.0
 
 # API and networking
 requests>=2.31.0
@@ -17,9 +15,8 @@ python-dotenv>=1.0.0
 
 # Utilities
 python-dateutil>=2.8.2
-tqdm>=4.66.0
 typing-extensions>=4.9.0
 
 # Model
-FastText cc.hi.300.bin
+fasttext-wheel>=0.9.2  # For Hindi word embeddings
 
