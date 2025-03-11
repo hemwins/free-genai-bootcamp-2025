@@ -35,8 +35,8 @@ const theme = createTheme({
 });
 const card = (lang: string, word: string, isAlone: boolean = false) => (
   <React.Fragment>
-    <CardContent sx={{ height: '100%', minWidth: { sm: 400 }, width: '100%' }}>
-      <Typography gutterBottom sx={{ color: 'text.primary', fontSize: 14 }}>
+    <CardContent sx={{ height: '100%', minWidth: { sm: 400 }, width: '100%' , textAlign: 'center' }}>
+      <Typography gutterBottom sx={{ color: 'text.primary', fontSize: 14 }} >
         {lang} word is:
       </Typography>
       <Typography variant="h5" component="div">
@@ -188,10 +188,15 @@ const App: React.FC = () => {
               <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
                 <Card>{card("English", word.english, true)}</Card>
               </Grid>
+              <Grid size={12}>
+            <Typography variant="h6" color="white" align="center">
+              Choose one from below options...
+            </Typography>
+            </Grid>
               {options.map((option, index) => (
                 <Grid size={{ xs: 6, md: 6 }} display="flex" justifyContent="center" alignItems="center">
                   <Card key={index} onClick={() => checkAnswer(option)}>
-                    {card("kanji", option)}
+                    {card("Kanji", option)}
                   </Card>
                 </Grid>
               ))}
