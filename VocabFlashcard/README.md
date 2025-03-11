@@ -24,7 +24,7 @@ This is a TypeScript-based application of the VocabFlashcard.
 ## API Endpoints
 
 - `GET /get_word`: Fetch a random word from the database.
-- `POST /check_answer`: Check if the provided answer is correct.
+- `POST /check_answer`: Check if the provided answer is correct and save the "is correct" status in database.
 
 ## Database
 
@@ -37,17 +37,16 @@ Ensure that the `JapaneseDB.db` SQLite database is present in the project root.
 - store correct word information in database
 - Store user progress in session variables, including consecutive correct answers and performance data.
 
-## New Features
 
 ### Badge of Excellence
 
-- The application now tracks the number of consecutive correct answers.
-- Users receive a "Badge of Excellence" and a happy animation when they answer three words correctly in a row.
+- The application tracks the number of consecutive correct answers.
+- Users receive a "Badge of Excellence" and a flying butterfly animation when they answer three words correctly in a row.
 
 ### Performance Report
 
 - Users can view a performance report upon quitting the session.
-- The report includes words answered correctly and incorrectly during the session.
+- The report includes words answered correctly and incorrectly and badges earned during the session.
 
 ## Detailed Functionality
 
@@ -63,7 +62,7 @@ Ensure that the `JapaneseDB.db` SQLite database is present in the project root.
 
    - **File**: `src/client.tsx`
    - **Function**: React component rendering
-   - **Description**: The flashcard shows the English word initially. Clicking on it toggles the display to show Kanji and Romaji.
+   - **Description**: The flashcard shows the English word initially.
 
 3. **User Interaction**: The user selects their answer from 4 flashcards.
 
@@ -77,7 +76,7 @@ Ensure that the `JapaneseDB.db` SQLite database is present in the project root.
    - **Function**: State updates and rendering logic
    - **Description**: If the answer is correct, a success message is shown, and the input is disabled. If incorrect, the user is encouraged to try again.
 
-5. **Badge and Report**: New logic to handle badges and performance reports.
+5. **Badge and Report**: logic to handle badges and performance reports.
    - **File**: `src/client.tsx`
    - **Function**: New session management logic
    - **Description**: Tracks consecutive correct answers and generates performance report upon quitting.

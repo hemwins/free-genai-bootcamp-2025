@@ -24,19 +24,26 @@ interface CheckAnswerResponse {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#000000',       // Black
-      contrastText: '#FFFFFF', // White
+      main: "#000000", // Black
+      contrastText: "#FFFFFF", // White
     },
     secondary: {
-      main: '#FFFFFF',       // White
-      contrastText: '#000000', // Black
+      main: "#FFFFFF", // White
+      contrastText: "#000000", // Black
     },
   },
 });
 const card = (lang: string, word: string, isAlone: boolean = false) => (
   <React.Fragment>
-    <CardContent sx={{ height: '100%', minWidth: { sm: 400 }, width: '100%' , textAlign: 'center' }}>
-      <Typography gutterBottom sx={{ color: 'text.primary', fontSize: 14 }} >
+    <CardContent
+      sx={{
+        height: "100%",
+        minWidth: { sm: 400 },
+        width: "100%",
+        textAlign: "center",
+      }}
+    >
+      <Typography gutterBottom sx={{ color: "text.primary", fontSize: 14 }}>
         {lang} word is:
       </Typography>
       <Typography variant="h5" component="div">
@@ -48,7 +55,7 @@ const card = (lang: string, word: string, isAlone: boolean = false) => (
 const CustomPrimaryButton = styled(Button)(({ theme }) => ({
   color: theme.palette.primary.main,
   backgroundColor: theme.palette.primary.contrastText,
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.primary.light,
   },
 }));
@@ -57,7 +64,7 @@ const CustomSecondaryButton = styled(Button)(({ theme }) => ({
   color: theme.palette.secondary.main,
   backgroundColor: theme.palette.primary.main,
   border: `1px solid ${theme.palette.grey[500]}`,
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.secondary.light,
   },
 }));
@@ -75,6 +82,13 @@ const App: React.FC = () => {
   const [showContinueButtons, setShowContinueButtons] = useState(false);
   const [goodbyeMessage, setGoodbyeMessage] = useState("");
 
+  // New state for tracking session performance
+  const [correctStreak, setCorrectStreak] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [totalWrong, setTotalWrong] = useState(0);
+  const [showBadge, setShowBadge] = useState(false);
+  const [showButterflies, setShowButterflies] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const fetchWord = async () => {
     setIsLoading(true);
@@ -91,7 +105,6 @@ const App: React.FC = () => {
         () => Math.random() - 0.5
       );
       setOptions(shuffledOptions);
-
       setShowKanji(false);
     } catch (error) {
       logger.error(`Error fetching words: ${error}`);
@@ -136,6 +149,17 @@ const App: React.FC = () => {
 
       if (data.correct) {
         setShowContinueButtons(true);
+        setTotalCorrect((prev) => prev + 1);
+        setCorrectStreak((prev) => prev + 1);
+
+        if (correctStreak + 1 >= 3) {
+          setShowBadge(true);
+          setShowButterflies(true);
+          setTimeout(() => setShowButterflies(false), 5000); // Hide after 5s
+        }
+      } else {
+        setTotalWrong((prev) => prev + 1);
+        setCorrectStreak(0); // Reset streak on wrong answer
       }
     } catch (error) {
       logger.error(`Error checking answer: ${error}`);
@@ -149,11 +173,13 @@ const App: React.FC = () => {
     setShowContinueButtons(false);
     fetchWord();
     setResult(""); // Clear the result message
+    setShowReport(false);
   };
 
   const handleQuit = () => {
     setShowContinueButtons(false);
-    setGoodbyeMessage("Goodbye! Thanks for practicing!");
+    setShowReport(true);
+    setGoodbyeMessage("Goodbye! See you again!");
   };
 
   useEffect(() => {
@@ -182,41 +208,76 @@ const App: React.FC = () => {
         <div>Loading...</div>
       ) : (
         word &&
-        !goodbyeMessage && (
+        !showReport && (
           <div className={styles.wordContainer}>
-            <Grid container justifyContent="center" alignItems="center" spacing={2}>
-              <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+            <Grid
+              container
+              justifyContent="center"
+              alignItems="center"
+              spacing={2}
+            >
+              <Grid
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                size={12}
+              >
                 <Card>{card("English", word.english, true)}</Card>
               </Grid>
               <Grid size={12}>
-            <Typography variant="h6" color="white" align="center">
-              Choose one from below options...
-            </Typography>
-            </Grid>
+                <Typography variant="h6" color="white" align="center">
+                  Choose correct Japanese word...
+                </Typography>
+              </Grid>
               {options.map((option, index) => (
-                <Grid size={{ xs: 6, md: 6 }} display="flex" justifyContent="center" alignItems="center">
+                <Grid
+                  size={{ xs: 6, md: 6 }}
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                >
                   <Card key={index} onClick={() => checkAnswer(option)}>
                     {card("Kanji", option)}
                   </Card>
                 </Grid>
               ))}
-            <Grid size={12}>
-            <Typography variant="h6" color="white" align="center">
-              {result}
-            </Typography>
+              <Grid size={12}>
+                <Typography variant="h6" color="white" align="center">
+                  {result}
+                </Typography>
+              </Grid>
             </Grid>
-            </Grid>
+
+            {showBadge && (
+              <div className={styles.badgeContainer}>
+                🎖️ Excellence Badge Awarded!
+              </div>
+            )}
+
+            {showButterflies && (
+              <div className={styles.butterfliesContainer}>🦋🦋🦋</div>
+            )}
           </div>
         )
       )}
       {showContinueButtons && (
         <Grid container spacing={2} justifyContent="center" alignItems="center">
-          <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+          <Grid
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            size={12}
+          >
             <CustomPrimaryButton variant="contained" onClick={handleContinue}>
               Continue
             </CustomPrimaryButton>
           </Grid>
-          <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+          <Grid
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            size={12}
+          >
             <CustomSecondaryButton
               variant="outlined"
               className={styles.button}
@@ -226,6 +287,24 @@ const App: React.FC = () => {
             </CustomSecondaryButton>
           </Grid>
         </Grid>
+      )}
+      {showReport && (
+        <div className={styles.reportContainer}>
+          <Typography variant="h5" align="center" color="white">
+            Performance Report
+          </Typography>
+          <Typography align="center" color="white">
+            Correct Answers: {totalCorrect}
+          </Typography>
+          <Typography align="center" color="white">
+            Wrong Answers: {totalWrong}
+          </Typography>
+          {showBadge && (
+            <Typography align="center" color="white">
+              🏅 Excellence Badge Earned!
+            </Typography>
+          )}
+        </div>
       )}
       {goodbyeMessage && (
         <Typography margin="normal" variant="h6" color="white" align="center">

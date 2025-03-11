@@ -24,47 +24,43 @@ export default defineConfig({
                   req.url,
                   "http://localhost"
                 ).searchParams.get("group_id");
-                console.info(
-                  `info: Fetching words for group_id: ${group_id}`
-                );
+                console.info(`info: Fetching words for group_id: ${group_id}`);
                 const response = await fetch(
                   `http://localhost:4999/api/groups/${group_id}/words/raw`
                 );
                 const vocabulary = await response.json();
                 const wordsArray = vocabulary.words;
-                console.info(
-                  `info: Fetched vocabulary: ${wordsArray}`
-                );
+                console.info(`info: Fetched vocabulary: ${wordsArray}`);
                 if (!wordsArray || wordsArray.length < 4) {
                   console.info(`Not enough words to generate options`);
                 }
 
                 if (!wordsArray || wordsArray.length === 0) {
                   console.error("No words found in API response");
-                  return res.end(JSON.stringify({ error: "No words available" }));
+                  return res.end(
+                    JSON.stringify({ error: "No words available" })
+                  );
                 } else {
-                  const randomWord = wordsArray[Math.floor(Math.random() * wordsArray.length)];
+                  const randomWord =
+                    wordsArray[Math.floor(Math.random() * wordsArray.length)];
                   // Get three wrong Kanji options
                   const wrongKanjiOptions = wordsArray
-                  .filter(w => w.kanji !== randomWord.kanji) // Exclude the correct one
-                  .sort(() => Math.random() - 0.5) // Shuffle
-                  .slice(0, 3) // Pick first 3 after shuffle
-                  .map(w => w.kanji); // Extract Kanji only
+                    .filter((w) => w.kanji !== randomWord.kanji) // Exclude the correct one
+                    .sort(() => Math.random() - 0.5) // Shuffle
+                    .slice(0, 3) // Pick first 3 after shuffle
+                    .map((w) => w.kanji); // Extract Kanji only
                   console.info(
-                    `info: Random word: ${JSON.stringify(
-                      randomWord
-                    )}`
+                    `info: Random word: ${JSON.stringify(randomWord)}`
                   );
                   console.info(
-                    `info: kanji word: ${JSON.stringify(
-                      wrongKanjiOptions
-                    )}`
+                    `info: kanji word: ${JSON.stringify(wrongKanjiOptions)}`
                   );
                   return res.end(
                     JSON.stringify({
                       word: randomWord,
                       wrongKanjiOptions: wrongKanjiOptions,
-                    }));
+                    })
+                  );
                 }
               }
 
@@ -94,7 +90,7 @@ export default defineConfig({
                   JSON.stringify({
                     result: correct
                       ? "Correct! Well done! 🎉"
-                      : "Try again! Keep going! 💪",
+                      : "OOPs! Try again! Keep going! 💪",
                     status: correct ? "learned" : "retry",
                     correct,
                   })
