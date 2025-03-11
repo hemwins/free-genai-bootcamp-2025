@@ -53,3 +53,38 @@
   margin-top: 20px;
   color: #007bff;
 }
+.headerText {
+  color: white;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.cardContent {
+  text-align: center;
+  padding: 10px;
+}
+
+.cardText {
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.instructions {
+  text-align: center;
+  color: white;
+}
+
+.optionCard {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.optionCard:hover {
+  transform: scale(1.05);
+}
+
+.resultText {
+  text-align: center;
+  font-size: 18px;
+  color: white;
+}
