@@ -55,3 +55,4 @@ backend/data/vectorstore/9e5dadcb-524e-4287-9cb7-8ee393bbb17b/length.bin
 backend/data/vectorstore/9e5dadcb-524e-4287-9cb7-8ee393bbb17b/link_lists.bin
 lang-portal/node_modules/*
 lang-portal/frontend-react/package-lock.json
+.qodo/history.sqlite
