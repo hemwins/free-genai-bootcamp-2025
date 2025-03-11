@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import styles from "./App.module.css";
 import { logger } from "./utils/logger";
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography/Typography";
+import Grid from "@mui/material/Grid2";
+import { styled } from "@mui/material/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 interface Word {
   english: string;
@@ -18,27 +21,49 @@ interface CheckAnswerResponse {
   correct: boolean;
   status: "learned" | "retry";
 }
-const card = (
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#000000',       // Black
+      contrastText: '#FFFFFF', // White
+    },
+    secondary: {
+      main: '#FFFFFF',       // White
+      contrastText: '#000000', // Black
+    },
+  },
+});
+const card = (lang: string, word: string, isAlone: boolean = false) => (
   <React.Fragment>
-    <CardContent>
-      <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 14 }}>
-        Word of the Day
+    <CardContent sx={{ height: '100%', minWidth: { sm: 400 }, width: '100%' }}>
+      <Typography gutterBottom sx={{ color: 'text.primary', fontSize: 14 }}>
+        {lang} word is:
       </Typography>
       <Typography variant="h5" component="div">
-        belent
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>adjective</Typography>
-      <Typography variant="body2">
-        well meaning and kindly.
-        <br />
-        {'"a benevolent smile"'}
+        {word}
       </Typography>
     </CardContent>
-    {/* <CardActions>
-      <Button size="small">Learn More</Button>
-    </CardActions> */}
   </React.Fragment>
 );
+const CustomPrimaryButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  backgroundColor: theme.palette.primary.contrastText,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.light,
+  },
+}));
+
+const CustomSecondaryButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.secondary.main,
+  backgroundColor: theme.palette.primary.main,
+  border: `1px solid ${theme.palette.grey[500]}`,
+  '&:hover': {
+    backgroundColor: theme.palette.secondary.light,
+  },
+}));
+const params = new URLSearchParams(window.location.search);
+const group_id = params.get("group_id");
+const session_id = params.get("session_id");
 
 const App: React.FC = () => {
   const [word, setWord] = useState<Word | null>(null);
@@ -50,9 +75,6 @@ const App: React.FC = () => {
   const [showContinueButtons, setShowContinueButtons] = useState(false);
   const [goodbyeMessage, setGoodbyeMessage] = useState("");
 
-  const params = new URLSearchParams(window.location.search);
-  const group_id = params.get("group_id");
-  const session_id = params.get("session_id");
 
   const fetchWord = async () => {
     setIsLoading(true);
@@ -143,64 +165,69 @@ const App: React.FC = () => {
       <div className={styles.app}>
         <div className={styles.errorMessage}>
           {error}
-          <button className={styles.button} onClick={() => fetchWord()}>
+          <Button className={styles.button} onClick={() => fetchWord()}>
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.app}>
-      <header className={styles.appHeader}>
-        <h1>Vocab Flashcard</h1>
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : (
-          word &&
-          !goodbyeMessage && (
-            <div className={styles.wordContainer}>
-              {/* Main Flashcard - Shows English */}
-              <p
-                className={styles.mainFlashcard}
-                onClick={() => setShowKanji(!showKanji)}
-              >
-                English: {word.english}
-              </p>
-
-              {/* Four Kanji Option Flashcards */}
-              <div className={styles.optionsContainer}>
-                {options.map((option, index) => (
-                  <div
-                    key={index}
-                    className={styles.optionFlashcard}
-                    onClick={() => checkAnswer(option)}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-
-              <p>{result}</p>
-            </div>
-          )
-        )}
-      </header>
+    <ThemeProvider theme={theme}>
+      <Typography variant="h4" color="white" align="center">
+        Vocab Flashcard
+      </Typography>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        word &&
+        !goodbyeMessage && (
+          <div className={styles.wordContainer}>
+            <Grid container justifyContent="center" alignItems="center" spacing={2}>
+              <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+                <Card>{card("English", word.english, true)}</Card>
+              </Grid>
+              {options.map((option, index) => (
+                <Grid size={{ xs: 6, md: 6 }} display="flex" justifyContent="center" alignItems="center">
+                  <Card key={index} onClick={() => checkAnswer(option)}>
+                    {card("kanji", option)}
+                  </Card>
+                </Grid>
+              ))}
+            <Grid size={12}>
+            <Typography variant="h6" color="white" align="center">
+              {result}
+            </Typography>
+            </Grid>
+            </Grid>
+          </div>
+        )
+      )}
       {showContinueButtons && (
-        <div className={styles.continueButtons}>
-          <button className={styles.button} onClick={handleContinue}>
-            Continue
-          </button>
-          <button className={styles.button} onClick={handleQuit}>
-            Quit
-          </button>
-        </div>
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+            <CustomPrimaryButton variant="contained" onClick={handleContinue}>
+              Continue
+            </CustomPrimaryButton>
+          </Grid>
+          <Grid display="flex" justifyContent="center" alignItems="center" size={12}>
+            <CustomSecondaryButton
+              variant="outlined"
+              className={styles.button}
+              onClick={handleQuit}
+            >
+              Quit
+            </CustomSecondaryButton>
+          </Grid>
+        </Grid>
       )}
       {goodbyeMessage && (
-        <div className={styles.goodbyeMessage}>{goodbyeMessage}</div>
+        <Typography margin="normal" variant="h6" color="white" align="center">
+          {goodbyeMessage}
+        </Typography>
       )}
-    </div>
+    </ThemeProvider>
   );
 };
 
