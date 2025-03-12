@@ -11,6 +11,7 @@ import GroupShow from '@/pages/GroupShow'
 import Sessions from '@/pages/Sessions'
 import StudySessionShow from '@/pages/StudySessionShow'
 import Settings from '@/pages/Settings'
+import VocabularyImporter from '@/pages/VocabularyImporter'
 
 export default function AppRouter() {
   return (
@@ -28,6 +29,7 @@ export default function AppRouter() {
           <Route path="/groups/:id" element={<GroupShow />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/sessions/:id" element={<StudySessionShow />} />
+          <Route path="/vocabulary-importer" element={<VocabularyImporter />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

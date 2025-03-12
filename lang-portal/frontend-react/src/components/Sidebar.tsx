@@ -1,13 +1,12 @@
 import * as React from "react"
 import { useLocation, Link } from "react-router-dom"
-import { WholeWord, Group, Home, Hourglass, BookOpenText, Settings } from "lucide-react"
+import { WholeWord, Group, Home, Hourglass, BookOpenText, Settings, Wrench } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -21,6 +20,7 @@ const navItems = [
   { icon: WholeWord, name: 'Words', path: '/words' },
   { icon: Group, name: 'Word Groups', path: '/groups' },
   { icon: Hourglass, name: 'Sessions', path: '/sessions' },
+  { icon: Wrench, name: 'Vocabulary Builder', path: '/vocabulary-importer' },
   { icon: Settings, name: 'Settings', path: '/settings' },
 ]
 

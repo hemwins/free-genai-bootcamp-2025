@@ -6,6 +6,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
+import routes.vocabulary
 import routes.words
 import routes.groups
 import routes.study_sessions
@@ -68,7 +69,7 @@ def create_app(test_config=None):
     routes.study_sessions.load(app)
     routes.dashboard.load(app)
     routes.study_activities.load(app)
-    
+    routes.vocabulary.load(app)
     return app
 
 def setup_logging(app):

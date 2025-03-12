@@ -51,7 +51,7 @@
       let Data;
       async function fetchWords(group_id) {
         try {
-          const apiUrl = `http://127.0.0.1:4999/groups/${group_id}/words/raw`;
+          const apiUrl = `http://127.0.0.1:4999/api/groups/${group_id}/words/raw`;
           const response = await fetch(`${apiUrl}`);
           Data = await response.json();
         } catch (error) {

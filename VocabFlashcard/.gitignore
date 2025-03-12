@@ -1,0 +1,4 @@
+# ...existing patterns if any...
+logs/*
+*.log
+node_modules

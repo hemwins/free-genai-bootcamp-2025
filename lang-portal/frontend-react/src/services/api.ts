@@ -13,6 +13,37 @@ export interface Group {
   group_name: string;
   word_count: number;
 }
+export interface StudyActivity{
+  id: number;
+  name: string;
+  url: string;
+  preview_url: string;
+}
+
+export interface SessionResponse{
+  'session': {
+    'id': number,
+    'group_id': number,
+    'group_name': string,
+    'study_activity_id': number,
+    'activity_name': string,
+    'start_time': string,
+    'end_time': string,
+    'review_items_count': number
+  },
+  'words': [{
+    'id': number,
+    'kanji':string,
+    'romaji': string,
+    'english': string,
+    'correct_count': number,
+    'wrong_count': number
+  }],
+  'total': number,
+  'page': number,
+  'per_page': number,
+  'total_pages': number
+}
 
 export interface GroupsResponse {
   groups: Group[];
@@ -43,10 +74,10 @@ export interface WordResponse {
 export interface WordsResponse {
   words: Word[];
   pagination: {
-  total_pages: number;
-  current_page: number;
-  total_words: number;
-  }
+    total_pages: number;
+    current_page: number;
+    total_words: number;
+  };
 }
 
 // Study Session types
@@ -91,6 +122,22 @@ export interface StudyStats {
   total_sessions: number;
   active_groups: number;
   current_streak: number;
+}
+
+export interface VocabularyItem {
+  kanji: string;
+  romaji: string;
+  english: string;
+  parts: [
+    {
+      kanji: string;
+      romaji: [string];
+    },
+    {
+      kanji: string;
+      romaji: [string];
+    }
+  ];
 }
 
 // Group API
@@ -209,6 +256,40 @@ export const createStudySession = async (
   } catch (err) {
     console.error("API Error:", err);
     throw err;
+  }
+};
+
+export const postVocabulary = async (
+  vocabulary: VocabularyItem[],
+  category: string
+): Promise<number> => {
+  logDebug("Posting vocabulary:", { category, vocabulary });
+  try {
+    const response = await fetch(`${API_BASE_URL}/vocabulary`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        category: category,
+        data: vocabulary,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to post vocabulary: ${
+          response.status
+        } - ${await response.text()}`
+      );
+    }
+
+    logDebug("Vocabulary posted successfully");
+    const responseBody = await response.json();
+    return responseBody.count;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
   }
 };
 
