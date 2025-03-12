@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 interface SaveButtonProps {
   onSave: () => Promise<void>;
@@ -16,23 +15,11 @@ const SaveButton: React.FC<SaveButtonProps> = ({
   disabled = false,
   className 
 }) => {
-  const { toast } = useToast();
-
   const handleSave = async () => {
     try {
       await onSave();
-      toast({
-        title: "Saved successfully",
-        description: "Your haiku and image have been saved",
-        variant: "default",
-      });
     } catch (error) {
       console.error('Save error:', error);
-      toast({
-        title: "Save failed",
-        description: "There was a problem saving your creation",
-        variant: "destructive",
-      });
     }
   };
 

@@ -4,62 +4,79 @@ import HaikuDisplay from "./HaikuDisplay";
 import ImageDisplay from "./ImageDisplay";
 import SaveButton from "./SaveButton";
 import AnimatedContainer from "./AnimatedContainer";
-import { toast } from "@/components/ui/use-toast";
 import { useDatabase } from "@/services/DatabaseService";
 
-// Language detection and haiku generation using Mistral-7B-Instruct-v0.2
 const detectLanguage = async (word: string): Promise<"en" | "jp"> => {
   try {
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACEHUB_API_TOKEN}`,
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          inputs: `You are a language detection expert. Your task is to identify whether the following word is in English or Japanese.
-          Word: ${word}
-          Language Reply with just "en" for English or "jp" for Japanese:`,
-          parameters: {
-            max_new_tokens: 10,
-            temperature: 0.1,
-          },
+          model: "gpt-4o-mini", 
+          messages: [
+            {
+              role: "system",
+              content: "You are a language detection expert. Identify whether the given word is in English or Japanese. Respond with 'en' for English or 'jp' for Japanese.",
+            },
+            {
+              role: "user",
+              content: `Word: ${word}`,
+            },
+          ],
+          max_tokens: 10,
+          temperature: 0.1,
         }),
-      }
-    );
+      });
 
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
-
     const result = await response.json();
-    const output = result[0]?.generated_text || "";
+    const output = result.choices[0]?.message?.content.trim().toLowerCase();
 
-    if (
-      output.toLowerCase().includes("jp") ||
-      output.toLowerCase().includes("japanese") ||
-      output.toLowerCase().includes("日本語")
-    ) {
-      return "jp";
-    } else {
-      return "en";
-    }
+    return output.includes("jp") ? "jp" : "en";
   } catch (error) {
     console.error("Language detection error:", error);
     return "en";
   }
 };
 
-const generateHaiku = async (
-  word: string,
-  language: "en" | "jp"
-): Promise<string[]> => {
-  try {
-    const prompt =
-      language === "jp"
-        ? `あなたは伝統的な俳句を専門とする創造的なAI詩人です。あなたのタスクは、<<<>>>の後にある単語に基づいて、美しい俳句を次の言語で作成することです：
+const englishPrompt = (
+  word: string
+) => `You are a creative AI poet specializing in traditional Haiku. Your task is to Create a beautiful Haiku based on the word after <<<>>> into the following predefined Language:
+English
+If the word does not qualify to be sufficient to create Haiku, classify it as
+insufficient
+You will only respond with the generated Haiku that has the maximum confidence score.Do not include the word "Haiku" or "俳句". Do not provide explanations, translations or notes.
+####
+Here are some examples:
+Word: frog
+Haiku: An old silent pond...
+A frog jumps into the pond,
+Splash! Silence again.
+Word: light
+Haiku: A summer river being crossed
+how pleasing
+with sandals in my hands.
+Word: time
+Haiku: Light of the moon
+Moves west,
+flowers' shadows creep eastward.
+Word: dew
+Haiku: A world of dew,
+And within every dewdrop
+A world of struggle.
+###
+<<<
+Word: ${word}
+>>>`;
+
+const japanesePrompt = (
+  word: string
+) => `あなたは伝統的な俳句を専門とする創造的なAI詩人です。あなたのタスクは、<<<>>>の後にある単語に基づいて、美しい俳句を次の言語で作成することです：
 日本語
 その単語が俳句を作成するのに不十分な場合、以下のように分類してください：
 insufficient
@@ -89,52 +106,33 @@ insufficient
 ###
 <<<  
 単語: ${word}  
->>>`
-        : `You are a creative AI poet specializing in traditional Haiku.. Your task is to Create a beautiful Haiku based on the word after <<<>>> into the following predefined Language:
-English
-If the word doesn't qualify to be sufficient to create Haiku, classify it as:
-insufficient
-You will only respond with the generated Haiku that has the maximum confidence score. Do not include the word "Haiku" or "俳句". Do not provide explanations, translations or notes.
-####
-Here are some examples:
-Word: frog
-Haiku: An old silent pond...
-A frog jumps into the pond,
-Splash! Silence again.
-Word: light
-Haiku: A summer river being crossed
-how pleasing
-with sandals in my hands.
-Word: time
-Haiku: Light of the moon
-Moves west,
-flowers' shadows creep eastward.
-Word: dew
-Haiku: A world of dew,
-And within every dewdrop
-A world of struggle.
-###
-<<<
-Word: ${word}
 >>>`;
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-      {
+const generateHaiku = async (
+  word: string,
+  language: "en" | "jp"
+): Promise<string[]> => {
+  try {
+    const prompt =
+      language === "jp" ? japanesePrompt(word) : englishPrompt(word);
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACEHUB_API_TOKEN}`,
+          Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 100,
-            temperature: 0.7,
-          },
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: prompt,
+            },
+          ],
+          max_tokens: 100,
+          temperature: 0.7,
         }),
-      }
-    );
+      });
 
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
@@ -154,12 +152,11 @@ Word: ${word}
 
     if (cleanedHaiku.length !== 3) {
       if (language === "jp") {
-        return ["朝の露", "花びらに映る", "夏の空"];
+        return ["not a good haiku"];
       } else {
-        return ["Morning dewdrops", "Reflecting on petals", "Summer sky above"];
+        return ["not a good haiku"];
       }
     }
-
     return cleanedHaiku;
   } catch (error) {
     console.error("Haiku generation error:", error);
@@ -178,7 +175,9 @@ const generateImage = async (haiku: string[]): Promise<string> => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACEHUB_API_TOKEN}`,
+          Authorization: `Bearer ${
+            import.meta.env.VITE_HUGGINGFACEHUB_API_TOKEN
+          }`,
         },
         body: JSON.stringify({
           inputs: prompt,
@@ -217,37 +216,7 @@ const saveCreation = async (
   ) => Promise<boolean>
 ): Promise<void> => {
   try {
-    // const fetchImage = async (url: string): Promise<Blob> => {
-    //   if (url.startsWith("blob:")) {
-    //     const response = await fetch(url);
-    //     return await response.blob();
-    //   } else if (url.startsWith("data:")) {
-    //     const base64Response = await fetch(url);
-    //     return await base64Response.blob();
-    //   } else {
-    //     const imgResponse = await fetch(url);
-    //     return await imgResponse.blob();
-    //   }
-    // };
-
-    // const imageBlob = await fetchImage(imageUrl);
-
-    // const downloadLink = document.createElement("a");
-    // downloadLink.href = URL.createObjectURL(imageBlob);
-    // downloadLink.download = `haiku-image-${Date.now()}.png`;
-    // document.body.appendChild(downloadLink);
-    // downloadLink.click();
-    // document.body.removeChild(downloadLink);
-
     const haikuText = haiku.join("\n");
-    // const textBlob = new Blob([haikuText], { type: "text/plain" });
-    // const textLink = document.createElement("a");
-    // textLink.href = URL.createObjectURL(textBlob);
-    // textLink.download = `haiku-text-${Date.now()}.txt`;
-    // document.body.appendChild(textLink);
-    // textLink.click();
-    // document.body.removeChild(textLink);
-
     const dbSuccess = await saveToDatabase(word, language, haikuText, imageUrl);
     if (!dbSuccess) {
       console.warn("Failed to save to database, but files were downloaded");
@@ -266,7 +235,7 @@ const saveCreation = async (
 interface HaikuGeneratorProps {
   onSave: () => void;
 }
-const HaikuGenerator: React.FC<HaikuGeneratorProps> = ({onSave}) => {
+const HaikuGenerator: React.FC<HaikuGeneratorProps> = ({ onSave }) => {
   const [word, setWord] = useState<string>("");
   const [language, setLanguage] = useState<"en" | "jp">("en");
   const [haiku, setHaiku] = useState<string[]>([]);
@@ -292,18 +261,8 @@ const HaikuGenerator: React.FC<HaikuGeneratorProps> = ({onSave}) => {
       setImageUrl(generatedImageUrl);
 
       setHasGenerated(true);
-      toast({
-        title: "Creation complete",
-        description: "Your haiku and image are ready to view",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error("Generation error:", error);
-      toast({
-        title: "Generation failed",
-        description: "There was a problem creating your haiku and image",
-        variant: "destructive",
-      });
+    } catch (error){
+        console.error("Generation error:", error);
     } finally {
       setIsGenerating(false);
     }

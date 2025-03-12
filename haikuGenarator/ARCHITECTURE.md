@@ -35,8 +35,8 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                     External Services & Storage                  │
 ├─────────────────────┬───────────────────┬─────────────────────┤
-│  mistralai/Mistral- │  stabilityai/     │  SQLite Database    │
-│  7B-Instruct-v0.2   │  stable-diffusion │  (SQL.js)           │
+│  open AI            │  stabilityai/     │  SQLite Database    │
+│  gpt 4omini         │  stable-diffusion │  (SQL.js)           │
 └─────────────────────┴───────────────────┴─────────────────────┘
 ```
 
@@ -44,7 +44,7 @@
 
 ```
 ┌─────┐       ┌────────────────┐       ┌──────────┐       ┌──────────┐      ┌────────┐
-│User │       │HaikuGenerator  │       │Mistral AI│       │Stable    │      │Database│
+│User │       │HaikuGenerator  │       │gpt  4o AI│       │Stable    │      │Database│
 │     │       │                │       │Service   │       │Diffusion │      │Service │
 └──┬──┘       └───────┬────────┘       └────┬─────┘       └────┬─────┘      └───┬────┘
    │                  │                     │                  │                │
@@ -97,7 +97,7 @@
    │◄─────────────────│                     │                  │                │
    │                  │                     │                  │                │
 ┌──┴──┐       ┌───────┴────────┐       ┌────┴─────┐       ┌────┴─────┐      ┌───┴────┐
-│User │       │HaikuGenerator  │       │Mistral AI│       │Stable    │      │Database│
+│User │       │HaikuGenerator  │       │gpt 4omini│       │Stable    │      │Database│
 │     │       │                │       │Service   │       │Diffusion │      │Service │
 └─────┘       └────────────────┘       └──────────┘       └──────────┘      └────────┘
 ```
@@ -156,7 +156,7 @@
 
 The application uses the Hugging Face Inference API to access two key models:
 
-1. **mistralai/Mistral-7B-Instruct-v0.2**:
+1. **gpt 4o mini**:
    - Used for language detection
    - Used for haiku generation with appropriate prompts
 

@@ -8,7 +8,7 @@
 npm>=8.0.0
 
 # Models required:
-# - mistralai/Mistral-7B-Instruct-v0.2 (for language detection and haiku generation)
+# - gpt 4o mini(for language detection and haiku generation)
 # - stabilityai/stable-diffusion-3.5-large (for image generation)
 
 # Environment Variables

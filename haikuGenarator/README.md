@@ -65,7 +65,7 @@ Haiku Image Muse is an elegant web application that generates traditional haikus
 - **Frontend**: React, TypeScript, Tailwind CSS
 - **UI Components**: shadcn/ui component library
 - **API Integration**:
-  - Language Detection & Haiku Generation: `mistralai/Mistral-7B-Instruct-v0.2` via Hugging Face Inference API
+  - Language Detection & Haiku Generation: gpt 4o mini
   - Image Generation: `stabilityai/stable-diffusion-3.5-large` via Hugging Face Inference API
 - **Database**: SQLite (implemented with SQL.js for client-side storage)
 - **Animation**: Custom animation components with CSS transitions
