@@ -13,6 +13,37 @@ export interface Group {
   group_name: string;
   word_count: number;
 }
+export interface StudyActivity{
+  id: number;
+  name: string;
+  url: string;
+  preview_url: string;
+}
+
+export interface SessionResponse{
+  'session': {
+    'id': number,
+    'group_id': number,
+    'group_name': string,
+    'study_activity_id': number,
+    'activity_name': string,
+    'start_time': string,
+    'end_time': string,
+    'review_items_count': number
+  },
+  'words': [{
+    'id': number,
+    'kanji':string,
+    'romaji': string,
+    'english': string,
+    'correct_count': number,
+    'wrong_count': number
+  }],
+  'total': number,
+  'page': number,
+  'per_page': number,
+  'total_pages': number
+}
 
 export interface GroupsResponse {
   groups: Group[];

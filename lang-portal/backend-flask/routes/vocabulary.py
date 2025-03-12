@@ -21,10 +21,13 @@ def load(app):
                 romaji = item.get('romaji')
                 english = item.get('english')
                 parts = json.dumps(item.get('parts'))
-            required_fields = ['kanji', 'romaji', 'english', 'parts']
-            if not all(field in vocabulary for field in required_fields):
-                app.logger.warning(f"Missing required vocabulary fields in request: {vocabulary}")
-                return jsonify({"error": "Missing required vocabulary fields"}), 400
+                if not all([kanji, romaji, english, parts]):
+                    app.logger.warning(f"kanji in vocabulary fields: {kanji}")
+                    app.logger.warning(f"romaji in vocabulary fields: {romaji}")
+                    app.logger.warning(f"english in vocabulary fields: {english}")
+                    app.logger.warning(f"parts in vocabulary fields: {parts}")
+                    app.logger.warning(f"Missing required vocabulary fields in request: {vocabulary}")
+                    return jsonify({"error": "Missing required vocabulary fields"}), 400
 
             cursor = app.db.cursor()
 

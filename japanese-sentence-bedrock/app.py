@@ -8,25 +8,8 @@ load_dotenv()
 
 bedrock = boto3.client('bedrock-runtime')
 
-# If we were doing streaming....
-#def stream(resp):  
-# full_response = ""
-# for event in resp.get('stream'):
-#   if 'messageStart' in event:
-#     print("Response started:", event['messageStart']['role'])
-#   elif 'contentBlockDelta' in event:
-#     chunk = event['contentBlockDelta']['delta'].get('text', '')
-#     full_response += chunk
-#     print(chunk, end='', flush=True)  # Print chunks as they arrive
-#   elif 'messageStop' in event:
-#     print("\n\nResponse completed. Stop reason:", event['messageStop']['stopReason'])
-#   elif 'metadata' in event:
-#     print("\nMetadata:", json.dumps(event['metadata'], indent=2))  
-# return full_response  
-
 async def query_bedrock(chat_history):
   # open the system prompt file on every query
-  # so we can dynamically change it.
   script_dir = os.path.dirname(os.path.abspath(__file__))
   prompt_file_path = os.path.join(script_dir, 'prompts', 'system_prompt.md')
   with open(prompt_file_path, 'r') as file:
