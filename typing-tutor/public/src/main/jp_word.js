@@ -76,7 +76,7 @@ class JpWord {
 		this.y = -this.size_kj // Phaser.Math.Between(0, scene.game.config.height)
 		this.falling = true
 
-		word.parts.forEach((part, index) => {
+		JSON.parse(word.parts).forEach((part, index) => {
 			this.blocks[index].set(
 				this.x,
 				this.y,

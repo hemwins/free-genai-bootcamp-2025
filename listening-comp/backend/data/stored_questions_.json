@@ -1,0 +1,302 @@
+{
+  "20250215_204111": {
+    "question": {
+      "Introduction": "男の人と女の人がショッピングセンターで話してい",
+      "Conversation": "男の人：このバッグはどれくらいしますか 店員：このバッグは5,000円です。他に何かご覧になりたいものがあれば教えてください。 女の人：あの、赤い靴は在庫ありますか？ 店員：はい、赤い靴はサイズ7とサイズ8があります。 男の人：じゃあ、このバッグを購入します。",
+      "Question": "男の人が購入する商品は何ですか A) バッグ B) 靴 C) 靴とバッグ D) 何も購入しない",
+      "Options": [
+        "ピザを食べる",
+        "ハンバーガーを食べる",
+        "サラダを食べる",
+        "パスタを食べる"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2025-02-15 20:41:11"
+  },
+  "20250215_204153": {
+    "question": {
+      "Introduction": "男の人と女の人が旅行の計画について話しています",
+      "Conversation": "男: 来週の旅行はどこへ行きますか？ 女: 京都に行きます。桜が見たくて。 男: そうですか、楽しみですね。新幹線で行きますか？ 女: いいえ、飛行機の方が早いですよ。友達と一緒だから。",
+      "Question": "女の人はどこへ旅行に行きますか？",
+      "Options": [
+        "a) 東京",
+        "b) 大阪",
+        "c) 京都",
+        "d) 北海道"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Travel",
+    "created_at": "2025-02-15 20:41:53"
+  },
+  "20250215_211441": {
+    "question": {
+      "Introduction": "男の人と女の人がショッピングセンターで話してい",
+      "Conversation": "男の人：このバッグはどれくらいしますか 店員：このバッグは5,000円です。他に何かご覧になりたいものがあれば教えてください。 女の人：あの、赤い靴は在庫ありますか？ 店員：はい、赤い靴はサイズ7とサイズ8があります。 男の人：じゃあ、このバッグを購入します。",
+      "Question": "男の人が購入する商品は何ですか A) バッグ B) 靴 C) 靴とバッグ D) 何も購入しない",
+      "Options": [
+        "ピザを食べる",
+        "ハンバーガーを食べる",
+        "サラダを食べる",
+        "パスタを食べる"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2025-02-15 21:14:41",
+    "audio_file": "listening-comp/frontend/static/audio/question_20250215_211437.mp3"
+  },
+  "20250215_211742": {
+    "question": {
+      "Introduction": "男の人と女の人がショッピングセンターで話してい",
+      "Conversation": "男の人：このバッグはどれくらいしますか 店員：このバッグは5,000円です。他に何かご覧になりたいものがあれば教えてください。 女の人：あの、赤い靴は在庫ありますか？ 店員：はい、赤い靴はサイズ7とサイズ8があります。 男の人：じゃあ、このバッグを購入します。",
+      "Question": "男の人が購入する商品は何ですか A) バッグ B) 靴 C) 靴とバッグ D) 何も購入しない",
+      "Options": [
+        "ピザを食べる",
+        "ハンバーガーを食べる",
+        "サラダを食べる",
+        "パスタを食べる"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2025-02-15 21:17:42",
+    "audio_file": "listening-comp/frontend/static/audio/question_20250215_211737.mp3"
+  },
+  "20250220_092704": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 09:27:04",
+    "audio_file": null
+  },
+  "20250220_093355": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 09:33:55",
+    "audio_file": null
+  },
+  "20250220_093406": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 09:34:06",
+    "audio_file": null
+  },
+  "20250220_094703": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 09:47:03",
+    "audio_file": null
+  },
+  "20250220_094903": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 09:49:03",
+    "audio_file": null
+  },
+  "20250220_101512": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:15:12",
+    "audio_file": null
+  },
+  "20250220_101539": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:15:39",
+    "audio_file": null
+  },
+  "20250220_101540": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:15:40",
+    "audio_file": null
+  },
+  "20250220_101541": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:15:41",
+    "audio_file": null
+  },
+  "20250220_101550": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:15:50",
+    "audio_file": null
+  },
+  "20250220_101651": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:16:51",
+    "audio_file": null
+  },
+  "20250220_103125": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:31:25",
+    "audio_file": null
+  },
+  "20250220_103444": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:34:44",
+    "audio_file": null
+  },
+  "20250220_103511": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:35:11",
+    "audio_file": null
+  },
+  "20250220_103512": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:35:12",
+    "audio_file": null
+  },
+  "20250220_104021": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:40:21",
+    "audio_file": null
+  },
+  "20250220_104403": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:44:03",
+    "audio_file": null
+  },
+  "20250220_104413": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:44:13",
+    "audio_file": null
+  },
+  "20250220_105436": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:54:36",
+    "audio_file": null
+  },
+  "20250220_105440": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 10:54:40",
+    "audio_file": null
+  },
+  "20250220_163017": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 16:30:17",
+    "audio_file": null
+  },
+  "20250220_163433": {
+    "question": null,
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 16:34:33",
+    "audio_file": null
+  },
+  "20250220_170737": {
+    "question": null,
+    "practice_type": "Phrase Matching",
+    "topic": "Announcements",
+    "created_at": "2025-02-20 17:07:37",
+    "audio_file": null
+  },
+  "20250220_180404": {
+    "question": {
+      "introduction": "女の人と男の留学生が話しています",
+      "conversation": "男の留学生は金曜日何をしていますか日本はどうですかはいとても楽しいです毎日大学に行きますかいいえ月曜日から木曜日まで大学に行って金曜日は近くの図書館で勉強します土曜日や日曜日はどうしていますか掃除をしたり友達と会ったりしていますそうですか",
+      "question": "男の留学生は金曜日何をしていますか"
+    },
+    "practice_type": "dialogue",
+    "topic": "listening_comprehension",
+    "created_at": "2025-02-20 18:04:04",
+    "audio_file": null
+  },
+  "20250220_180410": {
+    "question": {
+      "introduction": "男の人と女の人が話しています",
+      "conversation": "女の人は今から何をしますか仕事は終わりましたかはいじゃあ一緒に晩御飯を食べに行きませんかあごめんなさいちょっと頭が痛いですから今日はもううちに帰りますそうじゃあまた",
+      "question": "女の人は今から何をしますか"
+    },
+    "practice_type": "dialogue",
+    "topic": "listening_comprehension",
+    "created_at": "2025-02-20 18:04:10",
+    "audio_file": null
+  },
+  "20250220_195736": {
+    "question": {
+      "Introduction": "カフェで男の人と女の人が話している",
+      "Conversation": "今日はカフェでゆっくりしたいんですが、この後友達と会う予定があるんですよ",
+      "Question": "男の人はいつ友達と会う予定ですか",
+      "Options": [
+        "A) 今から",
+        "B) 午後3時",
+        "C) 午後5時",
+        "D) 明日の朝"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 19:57:36",
+    "audio_file": null
+  },
+  "20250220_210620": {
+    "question": {
+      "Introduction": "カフェで男の人と女の人が話している",
+      "Conversation": "今日はカフェでゆっくりしたいんですが、この後友達と会う予定があるんですよ",
+      "Question": "男の人はいつ友達と会う予定ですか",
+      "Options": [
+        "A) 今から",
+        "B) 午後3時",
+        "C) 午後5時",
+        "D) 明日の朝"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Daily Conversation",
+    "created_at": "2025-02-20 21:06:20",
+    "audio_file": "/Users/yahoo.m1/Documents/Github/free-genai-bootcamp-2025/listening-comp/frontend/static/audio/question_20250220_210614.mp3"
+  },
+  "20250220_212229": {
+    "question": {
+      "Introduction": "男の人と女の人がショッピングセンターで話してい",
+      "Conversation": "男の人：このバッグはどれくらいしますか 店員：このバッグは5,000円です。他に何かご覧になりたいものがあれば教えてください。 女の人：あの、赤い靴は在庫ありますか？ 店員：はい、赤い靴はサイズ7とサイズ8があります。 男の人：じゃあ、このバッグを購入します。",
+      "Question": "男の人が購入する商品は何ですか A) バッグ B) 靴 C) 靴とバッグ D) 何も購入しない",
+      "Options": [
+        "ピザを食べる",
+        "ハンバーガーを食べる",
+        "サラダを食べる",
+        "パスタを食べる"
+      ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2025-02-20 21:22:29",
+    "audio_file": "/Users/yahoo.m1/Documents/Github/free-genai-bootcamp-2025/listening-comp/frontend/static/audio/question_20250220_212220.mp3"
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "student_1": {
+      "correct": ["सुंदर"],
+      "incorrect": ["बड़ा"]
+    },
+    "student_2": {
+      "correct": [],
+      "incorrect": []
+    }
+}
+  

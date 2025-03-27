@@ -1,0 +1,134 @@
+.app {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.appHeader {
+  background-color: #282c34;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  width: 100%;
+}
+
+.errorMessage {
+  color: #ff6b6b;
+  padding: 1rem;
+  margin: 1rem;
+  border: 1px solid #ff6b6b;
+  border-radius: 4px;
+}
+
+.wordContainer {
+  margin: 2rem 0;
+}
+
+.input {
+  margin: 1rem 0;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.button {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.continueButtons {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.goodbyeMessage {
+  font-size: 1.5em;
+  margin-top: 20px;
+  color: #007bff;
+}
+.headerText {
+  color: white;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.cardContent {
+  text-align: center;
+  padding: 10px;
+}
+
+.cardText {
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.instructions {
+  text-align: center;
+  color: white;
+}
+
+.optionCard {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.optionCard:hover {
+  transform: scale(1.05);
+}
+
+.resultText {
+  text-align: center;
+  font-size: 18px;
+  color: white;
+}
+
+.badgeContainer {
+  text-align: center;
+  font-size: 1.5em;
+  color: gold;
+  margin-top: 20px;
+  animation: fadeIn 2s ease-in-out;
+}
+
+.butterfliesContainer {
+  text-align: center;
+  font-size: 2em;
+  margin-top: 10px;
+  animation: float 5s infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.reportContainer {
+  text-align: center;
+  padding: 20px;
+  border: 2px solid white;
+  border-radius: 10px;
+  margin-top: 20px;
+}

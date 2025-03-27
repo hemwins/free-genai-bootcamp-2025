@@ -1,0 +1,27 @@
+
+# Haiku Image Muse - Environment Requirements
+
+# Node.js environment
+# Minimum version required: Node.js 18.x or higher
+
+# Package Manager
+npm>=8.0.0
+
+# Models required:
+# - gpt 4o mini(for language detection and haiku generation)
+# - stabilityai/stable-diffusion-3.5-large (for image generation)
+
+# Environment Variables
+# Create a .env file with the following:
+# HUGGINGFACE_API_KEY=your_api_key_here
+
+# Database Requirements
+# SQLite database (implemented through SQL.js)
+# No external database server required - runs entirely in the browser
+
+# Web Server Requirements
+# The application runs on port 8080 by default
+# Ensure this port is available or configure a different port in vite.config.ts
+
+# Dependencies for database implementation
+# sql.js package will be installed via npm
