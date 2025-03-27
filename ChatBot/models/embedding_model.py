@@ -126,16 +126,29 @@ class FastTextEmbedding:
             self.logger.error(f"Error adding word {word}: {e}")
     
     def find_closest_match(self, student_answer: str, target_word: str) -> Tuple[bool, float]:
-        """Find similarity between a student's answer and target word using vector store."""
+        """Check if student_answer matches the target_word or its synonyms."""
         try:
-            results = self.vector_store.similarity_search_with_score(student_answer, k=1)
-            if results:
-                doc, similarity = results[0]
-                is_match = similarity > 0.8  # Define a threshold for matching
-                return is_match, float(similarity)
+            if student_answer == target_word:
+                self.logger.error(f"student copied the word: {target_word}")
+                return False, 0.0  # copied word
+
+            self.logger.error(f"inside find_closest_match student_answer: {student_answer}")
+            self.logger.error(f"inside find_closest_match word: {target_word}")
+            synonyms = self.get_word_synonyms(target_word)
+            self.logger.error(f"inside find_closest_match synonyms: {synonyms}")
+            
+            for synonym in synonyms:
+                results = self.vector_store.similarity_search_with_score(student_answer, k=1)
+                if results:
+                    doc, similarity = results[0]
+                    if doc.page_content == synonym and similarity > 0.8:
+                        return True, float(similarity)
+
         except Exception as e:
             self.logger.error(f"Error finding closest match: {e}")
+
         return False, 0.0
+
     
     def get_unlearned_words(self, learned_words: List[str]) -> List[str]:
         """Fetch words that haven't been learned yet using vector store."""
@@ -160,10 +173,11 @@ class FastTextEmbedding:
                 k=1,
                 filter={"type": "word"}
             )
+            self.logger.error(f"inside get_word_synonyms fetched synonyms for {word}: {results[0].metadata.get("synonyms", [])}")
             if results:
                 return results[0].metadata.get("synonyms", [])
         except Exception as e:
-            self.logger.error(f"Error fetching synonyms for {word}: {e}")
+            self.logger.error(f"inside get_word_synonyms Error fetching synonyms for {word}: {e}")
         return []
 
     def get_similar_words(self, word: str, k: int = 3) -> List[str]:
